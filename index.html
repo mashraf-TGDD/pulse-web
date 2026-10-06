@@ -1,0 +1,2379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pulse</title>
+<!-- Empty when the Pulse server serves this page (same-origin /api). The static
+     build (web/build.mjs) fills them: the page then signs in with Google
+     (Supabase Auth) and calls the pulse-api Edge Function. -->
+<meta name="pulse-api" content="https://cmvshqivdrsuwweqrvdq.supabase.co/functions/v1/pulse-api" />
+<meta name="pulse-supabase-url" content="https://cmvshqivdrsuwweqrvdq.supabase.co" />
+<meta name="pulse-supabase-key" content="sb_publishable_g8wNk8yfDzKjIGNLWURgKg_2h_5Zncg" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23e5484d'/><stop offset='1' stop-color='%23b4232a'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><path d='M5 17h5.5l2.5-6.5 4 12 3-8.5 1.5 3H25' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/><circle cx='27' cy='17' r='2' fill='white'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script>
+  // Applied before first paint to avoid a flash of the wrong theme.
+  (function () {
+    try {
+      var saved = localStorage.getItem('pulse-theme') || localStorage.getItem('onair-theme');
+      if (saved === 'dark' || saved === 'light') document.documentElement.setAttribute('data-theme', saved);
+    } catch (e) {}
+  })();
+</script>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #f8f9fb;
+    --surface-3: #eff1f4;
+    --border: #e5e8ec;
+    --border-strong: #d4d9e0;
+    --ink: #0d1726;
+    --ink-2: #344054;
+    --muted: #667085;
+    --faint: #98a2b3;
+    --accent: #0e7a5a;
+    --accent-strong: #0b5f46;
+    --accent-soft: #e5f4ee;
+    --accent-ink: #0b6b4f;
+    --warn: #b7791f;
+    --warn-soft: #fdf4e3;
+    --neg: #c4320a;
+    --neg-soft: #fdece7;
+    --live: #e5484d;
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-md: 0 1px 3px rgba(16, 24, 40, 0.06), 0 8px 24px -6px rgba(16, 24, 40, 0.10);
+    --radius: 12px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0e15; --surface: #111722; --surface-2: #151c29; --surface-3: #1b2333;
+      --border: #222b3b; --border-strong: #2e3a4e; --ink: #e8ecf2; --ink-2: #c3cad6;
+      --muted: #8a94a6; --faint: #5d6778; --accent: #34c38f; --accent-strong: #4fd6a3;
+      --accent-soft: #10291f; --accent-ink: #5fe0ad; --warn: #e5b452; --warn-soft: #2a2213;
+      --neg: #ff7a5c; --neg-soft: #2e1611; --live: #ff5c61;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.35), 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0e15; --surface: #111722; --surface-2: #151c29; --surface-3: #1b2333;
+    --border: #222b3b; --border-strong: #2e3a4e; --ink: #e8ecf2; --ink-2: #c3cad6;
+    --muted: #8a94a6; --faint: #5d6778; --accent: #34c38f; --accent-strong: #4fd6a3;
+    --accent-soft: #10291f; --accent-ink: #5fe0ad; --warn: #e5b452; --warn-soft: #2a2213;
+    --neg: #ff7a5c; --neg-soft: #2e1611; --live: #ff5c61;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.35), 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    font-size: 14px;
+    line-height: 1.45;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  a { color: var(--accent-ink); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  svg.i { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- Shell ---------- */
+  .shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; }
+  .sidebar {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column; gap: 24px;
+    padding: 20px 14px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px; }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 9px;
+    display: grid; place-items: center;
+    background: linear-gradient(140deg, #e5484d, #b4232a);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .brand-mark svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .brand-mark svg circle { fill: currentColor; stroke: none; }
+  .brand-name { font-weight: 650; font-size: 15px; letter-spacing: -0.01em; }
+  .brand-sub { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+  .live-dot { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+  .live-dot::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%;
+    border: 1.5px solid var(--live); opacity: 0; animation: ping 2s ease-out infinite;
+  }
+  @keyframes ping { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } }
+
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-label { font-size: 11px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 10px 6px; }
+  .tab-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border: 0; border-radius: 8px;
+    background: transparent; color: var(--muted);
+    font-size: 13.5px; font-weight: 500; text-align: left; cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .tab-btn:hover { background: var(--surface-3); color: var(--ink); }
+  .tab-btn.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+  .tab-btn .count {
+    margin-left: auto; min-width: 20px; padding: 0 6px; height: 20px; border-radius: 10px;
+    display: inline-grid; place-items: center;
+    background: var(--warn); color: #fff; font-size: 11px; font-weight: 650;
+  }
+  .tab-btn .count[hidden] { display: none; }
+
+  .sidebar-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  .sources {
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    background: var(--surface-2); font-size: 12px;
+  }
+  .sources-title { display: flex; justify-content: space-between; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+  .source-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; color: var(--ink-2); }
+  .source-row .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); flex-shrink: 0; }
+  .source-row .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .source-row .dot.on { background: var(--accent); }
+  .source-row .dot.demo { background: var(--warn); }
+  .source-row .dot.err { background: var(--neg); }
+  .source-row .dot.planned { background: transparent; border: 1.5px solid var(--faint); width: 7px; height: 7px; }
+  .source-row .tag.live { color: var(--accent-ink); font-weight: 600; }
+  .source-row .tag.err { color: var(--neg); font-weight: 600; }
+  .sources-sub { margin: 8px 0 2px; font-size: 10.5px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; }
+  .sources-sub:first-child { margin-top: 0; }
+  .sources-foot { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); font-size: 11px; color: var(--faint); }
+  .source-row .tag { margin-left: auto; padding-left: 8px; color: var(--faint); font-size: 11px; white-space: nowrap; }
+  .theme-toggle {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface); color: var(--ink-2); font-size: 12.5px; cursor: pointer;
+  }
+  .theme-toggle:hover { background: var(--surface-3); }
+
+  main { min-width: 0; padding: 28px 36px 64px; }
+  .content { max-width: 1240px; margin: 0 auto; }
+
+  /* ---------- Page header & filters ---------- */
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
+  .page-title { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -0.02em; }
+  .page-sub { margin-top: 4px; color: var(--muted); font-size: 13px; }
+  .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .control {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 36px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 9px;
+    background: var(--surface); box-shadow: var(--shadow-sm);
+    font-size: 13px; color: var(--ink-2);
+  }
+  .control .k { color: var(--faint); font-size: 12px; }
+  .control select {
+    border: 0; background: transparent; padding: 0 2px; font-weight: 550; color: var(--ink);
+    cursor: pointer; outline: none; max-width: 190px;
+  }
+  .control select option { background: var(--surface); color: var(--ink); }
+  .segmented { display: inline-flex; padding: 3px; gap: 2px; height: 36px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-3); }
+  .segmented button {
+    border: 0; background: transparent; padding: 0 11px; border-radius: 6px;
+    font-size: 12.5px; font-weight: 550; color: var(--muted); cursor: pointer;
+  }
+  .segmented button:hover { color: var(--ink); }
+  .segmented button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+
+  .range { padding: 0 4px 0 12px; gap: 2px; }
+  .range .sep { color: var(--faint); padding: 0 2px; }
+  .period-picker { position: relative; }
+  .period-btn {
+    border: 0; background: transparent; padding: 5px 8px; border-radius: 6px;
+    font-size: 13px; font-weight: 550; color: var(--ink); cursor: pointer; white-space: nowrap;
+  }
+  .period-btn:hover { background: var(--surface-3); }
+  .period-panel {
+    position: absolute; top: calc(100% + 8px); right: 0; z-index: 30;
+    width: 252px; padding: 12px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow-md);
+  }
+  .period-panel[hidden] { display: none; }
+  .month-btn { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .month-btn .v { font-weight: 550; color: var(--ink); white-space: nowrap; }
+  .month-panel { width: 268px; }
+  .month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .month-cell {
+    height: 34px; border: 0; border-radius: 7px; background: transparent;
+    font-size: 12.5px; font-weight: 550; color: var(--ink); cursor: pointer;
+  }
+  .month-cell:hover:not(:disabled) { background: var(--surface-3); }
+  .month-cell:disabled { color: var(--faint); opacity: 0.45; cursor: not-allowed; }
+  .month-cell.in-range { background: var(--accent-soft); color: var(--accent-ink); border-radius: 0; }
+  .month-cell.edge { background: var(--accent); color: #fff; }
+  .calc-line { margin: 4px 18px 0; font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .calc-line:empty { display: none; }
+  .calc-line b { color: var(--ink); }
+  .segmented.basis { height: 34px; width: fit-content; }
+  .segmented.basis button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .month-hint { margin-top: 10px; font-size: 11.5px; color: var(--muted); }
+  .period-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .year-label { font-size: 13px; font-weight: 600; }
+  .year-nav {
+    width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--surface); cursor: pointer; font-size: 14px; line-height: 1; color: var(--ink-2);
+  }
+  .year-nav:hover:not(:disabled) { background: var(--surface-3); }
+  .year-nav:disabled { opacity: 0.35; cursor: not-allowed; }
+  .weekday-row, .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .weekday-row { margin-bottom: 4px; }
+  .weekday-row span { text-align: center; font-size: 10.5px; font-weight: 600; color: var(--faint); }
+  .day-cell {
+    aspect-ratio: 1; border: 0; border-radius: 7px; background: transparent;
+    font-size: 12.5px; color: var(--ink); cursor: pointer; font-variant-numeric: tabular-nums;
+  }
+  .day-cell.pad { visibility: hidden; }
+  .day-cell:hover:not(:disabled):not(.pad):not(.selected) { background: var(--surface-3); }
+  .day-cell:disabled { color: var(--faint); opacity: 0.45; cursor: not-allowed; }
+  .day-cell.selected { background: var(--accent); color: #fff; font-weight: 650; }
+
+  .banner {
+    display: none; align-items: center; gap: 10px;
+    margin-bottom: 18px; padding: 10px 14px;
+    border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+    background: var(--warn-soft); color: var(--ink-2);
+    border-radius: 10px; font-size: 12.5px;
+  }
+  .banner.show { display: flex; }
+  .banner svg { color: var(--warn); }
+  .banner strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Cards ---------- */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .card-title { font-size: 14px; font-weight: 600; margin: 0; }
+  .card-hint { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+
+  .hero { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .metric { padding: 16px 18px 15px; }
+  .metric-label { font-size: 12.5px; color: var(--muted); font-weight: 500; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .metric-value { margin-top: 8px; font-size: 26px; font-weight: 650; letter-spacing: -0.025em; line-height: 1.1; }
+  .metric-value.neg { color: var(--neg); }
+  .metric-foot { margin-top: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); min-height: 18px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    height: 20px; padding: 0 7px; border-radius: 6px;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap;
+    background: var(--surface-3); color: var(--ink-2);
+  }
+  .chip.good { background: var(--accent-soft); color: var(--accent-ink); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.bad { background: var(--neg-soft); color: var(--neg); }
+  .meter { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
+  .meter > span { display: block; height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .meter .good, .bar-fill.good { background: var(--accent); }
+  .meter .warn, .bar-fill.warn { background: var(--warn); }
+  .meter .bad, .bar-fill.bad { background: var(--neg); }
+
+  .unit { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 14px; }
+  .unit-cell { padding: 14px 18px; border-left: 1px solid var(--border); }
+  .unit-cell:first-child { border-left: 0; }
+  .unit-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .unit-value { margin-top: 4px; font-size: 18px; font-weight: 650; letter-spacing: -0.015em; }
+  .unit-value small { font-size: 12px; color: var(--faint); font-weight: 500; margin-left: 2px; }
+  .unit-note { margin-top: 2px; font-size: 11.5px; color: var(--faint); }
+  .unit-cell.lead .unit-value { color: var(--accent-ink); }
+
+  /* ---------- Statement table ---------- */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    position: sticky; top: 0; z-index: 1;
+    padding: 10px 18px; background: var(--surface-2);
+    font-size: 11.5px; font-weight: 600; color: var(--muted);
+    text-align: right; white-space: nowrap; border-bottom: 1px solid var(--border);
+  }
+  thead th:first-child { text-align: left; }
+  tbody td {
+    padding: 9px 18px; text-align: right; white-space: nowrap;
+    border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums;
+  }
+  tbody td:first-child { text-align: left; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: var(--surface-2); }
+  .statement td:first-child { color: var(--ink-2); }
+  .statement tr.leaf td:first-child { padding-left: 34px; }
+  .statement tr.subtotal td { font-weight: 650; color: var(--ink); background: var(--surface-2); border-top: 1px solid var(--border-strong); }
+  .statement tr.subtotal td:first-child { color: var(--ink); }
+  .statement tr.subtotal.net td { background: var(--accent-soft); color: var(--accent-ink); border-top: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+  .statement tr.margin-row td { padding-top: 5px; padding-bottom: 9px; color: var(--muted); font-size: 12.5px; background: var(--surface-2); }
+  .statement tr.margin-row td:first-child { padding-left: 34px; font-style: italic; }
+  .statement .cost { color: var(--ink-2); }
+  .statement .neg { color: var(--neg); }
+  .statement .dim { color: var(--faint); }
+  .prov { display: inline-block; width: 6px; height: 6px; margin-left: 8px; border-radius: 50%; border: 1.5px solid var(--warn); vertical-align: middle; }
+  .legend-prov { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-prov .prov { margin-left: 0; }
+  .target-cell { text-align: left !important; width: 230px; }
+  .bar { display: flex; align-items: center; gap: 10px; }
+  .bar-track { flex: 0 0 96px; height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; }
+  .bar-fill { display: block; height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .bar-label { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .skeleton { position: relative; overflow: hidden; background: var(--surface-3); border-radius: 6px; color: transparent !important; }
+  .skeleton::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 60%, transparent), transparent);
+    animation: shimmer 1.3s infinite;
+  }
+  @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+  .tab-panel[hidden] { display: none; }
+  footer { margin-top: 28px; text-align: center; color: var(--faint); font-size: 12px; }
+
+  /* ---------- Invoices ---------- */
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .stat { padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
+  .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-3); color: var(--ink-2); }
+  .stat-icon.warn { background: var(--warn-soft); color: var(--warn); }
+  .stat-icon.good { background: var(--accent-soft); color: var(--accent-ink); }
+  .stat-icon svg.i { width: 18px; height: 18px; }
+  .stat-value { font-size: 20px; font-weight: 650; letter-spacing: -0.02em; }
+  .stat-label { font-size: 12px; color: var(--muted); }
+
+  .dropzone {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 22px; margin-bottom: 8px;
+    border: 1.5px dashed var(--border-strong); border-radius: var(--radius);
+    background: var(--surface); cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: var(--accent-soft); }
+  .dz-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); flex-shrink: 0; }
+  .dz-icon svg.i { width: 22px; height: 22px; }
+  .mailbox { display: flex; align-items: center; gap: 16px; padding: 18px 22px; margin-bottom: 12px; }
+  .mailbox .dz-icon.off { background: var(--surface-3); color: var(--muted); }
+  .mailbox .dz-icon.err { background: var(--neg-soft); color: var(--neg); }
+  .mailbox .mb-addr { font-weight: 650; }
+  .mailbox .mb-meta { margin-left: auto; text-align: right; font-size: 12px; color: var(--muted); }
+  .mailbox .mb-meta b { display: block; font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .dropzone.compact { padding: 12px 18px; }
+  .dropzone.compact .dz-icon { width: 34px; height: 34px; }
+  .source-line { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 10px 18px 0; font-size: 12.5px; color: var(--muted); }
+  .source-line b { color: var(--ink-2); font-weight: 550; }
+  .dz-title { font-weight: 600; }
+  .dz-sub { margin-top: 2px; font-size: 12.5px; color: var(--muted); }
+  .dz-cta { margin-left: auto; }
+  .inbox-note { font-size: 12px; color: var(--muted); margin: 0 2px 18px; }
+  .inbox-note code, .notes code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 11.5px; background: var(--surface-3); padding: 1px 5px; border-radius: 4px; }
+  .inbox-note.warn { color: var(--neg); }
+
+  .section-title { display: flex; align-items: center; gap: 8px; margin: 22px 2px 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .section-title .chip { font-weight: 600; }
+  .section-title[hidden] { display: none; }
+
+  .invoice-review { margin-bottom: 12px; overflow: hidden; }
+  .invoice-review .card-head { background: var(--surface-2); }
+  .review-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .review-file { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .review-summary { padding: 14px 18px 0; display: flex; gap: 22px; flex-wrap: wrap; }
+  .review-summary div { display: flex; flex-direction: column; }
+  .review-summary .k { font-size: 11.5px; color: var(--muted); }
+  .review-summary .v { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; }
+  .form { padding: 16px 18px 4px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 14px; }
+  .f { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .f label { font-size: 12px; font-weight: 500; color: var(--ink-2); display: flex; justify-content: space-between; }
+  .f label .req { color: var(--warn); font-weight: 600; font-size: 11px; }
+  .f label .k { color: var(--faint); font-weight: 500; font-size: 11px; }
+  .f select:disabled { background: var(--surface-3); color: var(--ink-2); cursor: not-allowed; opacity: 1; }
+  .f input, .f select {
+    height: 34px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 8px;
+    background: var(--surface); font-size: 13px; min-width: 0;
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .f input:focus, .f select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .f.missing input, .f.missing select { border-color: var(--warn); background: var(--warn-soft); }
+  .notes { margin: 10px 18px 0; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); font-size: 12.5px; color: var(--ink-2); }
+  .notes-title { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .notes ul { margin: 0; padding-left: 18px; }
+  .notes li { margin: 2px 0; }
+  .actions { display: flex; align-items: center; gap: 10px; padding: 14px 18px 16px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 34px; padding: 0 14px; border-radius: 8px;
+    border: 1px solid var(--border-strong); background: var(--surface);
+    font-size: 13px; font-weight: 550; color: var(--ink); cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+  }
+  .btn:hover { background: var(--surface-3); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+  .btn.ghost:hover { background: var(--surface-3); color: var(--ink); }
+  .invoice-status { font-size: 12.5px; color: var(--muted); }
+  .invoice-status.error { color: var(--neg); }
+  .invoice-status.ok { color: var(--accent-ink); }
+
+  .job { display: flex; align-items: center; gap: 14px; padding: 14px 18px; margin-bottom: 10px; }
+  .job-name { font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .job-main { min-width: 0; flex: 1; }
+  .steps { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--faint); }
+  .step { display: inline-flex; align-items: center; gap: 6px; }
+  .step .b { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-3); border: 1.5px solid var(--border-strong); }
+  .step.done { color: var(--muted); }
+  .step.done .b { background: var(--accent); border-color: var(--accent); }
+  .step.now { color: var(--ink); font-weight: 550; }
+  .step.now .b { border-color: var(--accent); background: var(--accent-soft); animation: pulse 1.2s ease-in-out infinite; }
+  .steps .line { width: 18px; height: 1.5px; background: var(--border-strong); }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); } }
+  .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--surface-3); border-top-color: var(--accent); animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .job.failed { border-color: color-mix(in srgb, var(--neg) 35%, transparent); }
+  .job .err-icon { color: var(--neg); }
+  .job.skipped { padding: 8px 18px; background: var(--surface-2); box-shadow: none; }
+  .job.skipped .job-name { font-weight: 500; color: var(--ink-2); }
+  .job.skipped .skip-icon { color: var(--faint); }
+  .job.skipped.check { border-color: color-mix(in srgb, var(--warn) 35%, transparent); }
+  .job.skipped.check .skip-icon { color: var(--warn); }
+
+  #coverageTable td, #coverageTable th { font-size: 13px; }
+  #coverageTable td:nth-child(-n+3), #coverageTable th:nth-child(-n+3) { text-align: left; }
+  #coverageTable td:first-child { font-weight: 550; color: var(--ink); }
+  .status-pill.missing { background: var(--warn-soft); color: var(--warn); }
+  .status-pill.estimated { background: var(--surface-3); color: var(--ink-2); }
+  #archiveTable td, #archiveTable th { font-size: 13px; text-align: left; }
+  #archiveTable td:nth-child(6), #archiveTable th:nth-child(6) { text-align: right; }
+  #archiveTable td:nth-child(3) { font-weight: 550; color: var(--ink); }
+  #archiveTable .archive-empty { text-align: center; color: var(--muted); padding: 28px; }
+  .status-pill { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 11.5px; font-weight: 600; text-transform: capitalize; }
+  .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-pill.ingested { background: var(--accent-soft); color: var(--accent-ink); }
+  .status-pill.superseded { background: var(--surface-3); color: var(--muted); }
+  .status-pill.quarantined { background: var(--neg-soft); color: var(--neg); }
+
+  /* ---------- Live market layer ---------- */
+  :root { --up: var(--accent); --down: var(--neg); }
+  .ticker {
+    position: sticky; top: 0; z-index: 25;
+    display: flex; height: 40px; margin: -28px -36px 24px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .ticker-label {
+    flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 0 16px;
+    background: var(--surface-2); border-right: 1px solid var(--border);
+    font-size: 11.5px; font-weight: 650; color: var(--ink-2); letter-spacing: 0.02em; white-space: nowrap;
+  }
+  .ticker-label .live-dot { width: 6px; height: 6px; }
+  .ticker-viewport { flex: 1; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+  .ticker-track { display: flex; width: max-content; animation: tick var(--dur, 60s) linear infinite; }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+  .tick { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border-right: 1px solid var(--border); font-size: 12.5px; white-space: nowrap; cursor: default; }
+  .tick .n { color: var(--muted); font-weight: 500; }
+  .tick .v { font-weight: 650; color: var(--ink); }
+  .chg { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .chg.good { color: var(--up); }
+  .chg.bad { color: var(--down); }
+  .chg.flat { color: var(--muted); }
+  .chg-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 6px; font-size: 12px; }
+  .chg-pill.good { background: color-mix(in srgb, var(--up) 13%, transparent); }
+  .chg-pill.bad { background: color-mix(in srgb, var(--down) 13%, transparent); }
+  .chg-pill.flat { background: var(--surface-3); }
+
+  .title-row { display: flex; align-items: center; gap: 12px; }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 6px;
+    background: color-mix(in srgb, var(--live) 12%, transparent); color: var(--live);
+    font-size: 10.5px; font-weight: 750; letter-spacing: 0.12em;
+  }
+  .live-badge .live-dot { width: 6px; height: 6px; }
+  .updated { color: var(--faint); }
+
+  @keyframes flashUp { 0% { background-color: color-mix(in srgb, var(--up) 30%, transparent); } 100% { background-color: transparent; } }
+  @keyframes flashDown { 0% { background-color: color-mix(in srgb, var(--down) 30%, transparent); } 100% { background-color: transparent; } }
+  .flash-up { animation: flashUp 1.6s ease-out; border-radius: 4px; }
+  .flash-down { animation: flashDown 1.6s ease-out; border-radius: 4px; }
+
+  .metric { position: relative; overflow: hidden; padding-bottom: 0; }
+  .metric-change { margin-top: 8px; white-space: nowrap; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); min-height: 22px; }
+  .metric-change .tgt { margin-left: auto; color: var(--faint); }
+  .metric .spark { display: block; width: calc(100% + 36px); height: 44px; margin: 10px -18px 0; }
+  .spark { color: var(--muted); overflow: visible; }
+  .spark.good { color: var(--up); }
+  .spark.bad { color: var(--down); }
+  .spark .l { fill: none; stroke: currentColor; stroke-width: 1.75; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+  .spark .a { fill: currentColor; opacity: 0.1; }
+
+  .board { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(280px, 1fr); gap: 14px; margin-bottom: 14px; }
+  .chart-card .card-head { flex-wrap: wrap; }
+  .chart-quote { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .chart-quote .big { font-size: 26px; font-weight: 700; letter-spacing: -0.025em; }
+  .chart-quote .sub { font-size: 12px; color: var(--muted); }
+  .segmented.small { height: 32px; }
+  .segmented.small button { padding: 0 9px; font-size: 12px; }
+  .chart { position: relative; height: 300px; padding: 4px 0 0; }
+  .chart svg { display: block; width: 100%; height: 100%; }
+  .chart .grid line { stroke: var(--border); stroke-dasharray: 2 4; }
+  .chart .axis text { fill: var(--faint); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .chart .good { stroke: var(--up); color: var(--up); }
+  .chart .bad { stroke: var(--down); color: var(--down); }
+  .chart svg.c-good { color: var(--up); }
+  .chart svg.c-bad { color: var(--down); }
+  .chart .last-line { stroke-dasharray: 3 3; stroke-width: 1; opacity: 0.7; }
+  .chart .tag rect { fill: currentColor; }
+  .chart text { stroke: none; }
+  .chart .tag text { fill: #fff; font-size: 11.5px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .chart .pulse { fill: currentColor; stroke: none; }
+  .chart .pulse-ring { fill: none; stroke: currentColor; stroke-width: 1.5; animation: ring 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes ring { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.2); opacity: 0; } }
+  .chart .cross { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+  .chart .hover-dot { opacity: 0; stroke: var(--surface); stroke-width: 2; fill: currentColor; }
+  .chart.hovering .cross, .chart.hovering .hover-dot { opacity: 1; }
+  .chart-tip {
+    position: absolute; top: 8px; pointer-events: none; opacity: 0; transform: translateX(-50%);
+    padding: 7px 10px; border-radius: 8px; background: var(--ink); color: var(--surface);
+    font-size: 12px; white-space: nowrap; box-shadow: var(--shadow-md); transition: opacity 0.1s;
+  }
+  .chart-tip b { display: block; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .chart.hovering .chart-tip { opacity: 1; }
+  .chart-empty { height: 100%; display: grid; place-items: center; color: var(--muted); }
+
+  .quotes { display: flex; flex-direction: column; }
+  .quote { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+  .quote:last-child { border-bottom: 0; }
+  .quote .ql { font-size: 12.5px; color: var(--ink-2); font-weight: 500; }
+  .quote .qn { font-size: 11.5px; color: var(--faint); }
+  .quote .qv { font-size: 16px; font-weight: 650; text-align: right; letter-spacing: -0.01em; }
+  .quote .qc { text-align: right; font-size: 12px; }
+
+  .markets td, .markets th { font-size: 13px; }
+  .markets tbody tr { cursor: pointer; }
+  .markets tbody tr.active td { background: var(--accent-soft); }
+  .markets .ent { display: flex; align-items: center; gap: 10px; }
+  .markets .flag { width: 30px; height: 22px; border-radius: 5px; display: grid; place-items: center; background: var(--surface-3); font-size: 10.5px; font-weight: 700; color: var(--ink-2); letter-spacing: 0.03em; }
+  .markets .ent-name { font-weight: 600; color: var(--ink); }
+  .markets .ent-sub { font-size: 11.5px; color: var(--faint); }
+  .markets .spark { width: 96px; height: 28px; display: inline-block; vertical-align: middle; }
+  .markets td.strong { font-weight: 650; color: var(--ink); }
+  .section-gap { margin-bottom: 14px; }
+
+  @media (max-width: 1100px) {
+    .board { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .ticker { margin: -20px -16px 18px; }
+    .ticker-label span.t { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-viewport { overflow-x: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 1100px) {
+    .hero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .unit { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .unit-cell:nth-child(4) { border-left: 0; }
+    .unit-cell:nth-child(n+4) { border-top: 1px solid var(--border); }
+    .form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { position: static; height: auto; flex-direction: row; align-items: center; flex-wrap: wrap; padding: 12px 16px; gap: 12px; border-right: 0; border-bottom: 1px solid var(--border); }
+    .nav { flex-direction: row; }
+    .nav-label, .sources { display: none; }
+    .sidebar-foot { margin: 0 0 0 auto; }
+    main { padding: 20px 16px 48px; }
+    .stats { grid-template-columns: 1fr; }
+    .unit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .unit-cell { border-left: 0 !important; border-top: 1px solid var(--border); }
+    .dropzone { flex-wrap: wrap; }
+    .dz-cta { margin-left: 0; }
+    .filters, .filters > * { max-width: 100%; }
+    .theme-toggle { font-size: 0; gap: 0; padding: 8px; }
+    .brand-sub { display: none; }
+  }
+  @media (max-width: 520px) {
+    .hero { grid-template-columns: 1fr; }
+    .form { grid-template-columns: 1fr; }
+  }
+  /* ---------- Sign-in (static page only) ---------- */
+  .signin { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: var(--bg); }
+  .signin[hidden] { display: none; }
+  .signin-card { width: 100%; max-width: 380px; padding: 28px; text-align: center; }
+  .signin-card h1 { font-size: 20px; margin: 12px 0 4px; color: var(--ink); }
+  .signin-card p { color: var(--muted); margin: 0 0 18px; font-size: 14px; }
+  .signin-card .brand-mark { margin: 0 auto; }
+  .signin-msg { margin-top: 14px; font-size: 13px; color: var(--neg); }
+  .user-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); padding: 8px 2px 0; }
+  .user-chip[hidden] { display: none; }
+  .user-chip strong { color: var(--ink-2); font-weight: 600; }
+  .user-chip button { background: none; border: 0; padding: 0; color: var(--accent-ink); font: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/></symbol>
+  <symbol id="i-cog" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></symbol>
+  <symbol id="i-tank" viewBox="0 0 24 24"><path d="M3 9c0-2.1 3.1-3.8 7-3.8s7 1.7 7 3.8"/><path d="M3 9c0 1.1 3.1 2 7 2s7-.9 7-2"/><path d="M3 9v11h14V9"/><path d="M19 7.5V20M22 7.5V20M19 10.5h3M19 14h3M19 17.5h3"/><path d="M1.5 20.5h21"/></symbol>
+  <symbol id="i-ship" viewBox="0 0 24 24"><path d="M2 14h20l-2.6 4.5H4.6z"/><path d="M5 14v-3h4v3M9 14v-4h4v4"/><path d="M15 14V7.5h3V14"/><path d="M16.5 7.5V5"/><path d="M2 21.5c1.6 0 1.6-1 3.3-1s1.6 1 3.3 1 1.6-1 3.4-1 1.6 1 3.3 1 1.6-1 3.4-1 1.6 1 3.3 1"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+</svg>
+
+<div class="signin" id="signin" hidden>
+  <div class="card signin-card">
+    <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 17h5.5l2.5-6.5 4 12 3-8.5 1.5 3H25"/><circle cx="27" cy="17" r="1.9"/></svg></div>
+    <h1>Pulse</h1>
+    <p>Tagaddod Live P&amp;L &middot; sign in with your Tagaddod Google account.</p>
+    <button type="button" class="btn primary" id="signinBtn">Sign in with Google</button>
+    <div class="signin-msg" id="signinMsg"></div>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 17h5.5l2.5-6.5 4 12 3-8.5 1.5 3H25"/><circle cx="27" cy="17" r="1.9"/></svg></div>
+      <div>
+        <div class="brand-name">Pulse</div>
+        <div class="brand-sub"><span class="live-dot" title="Live figures from connected sources"></span>Tagaddod · Live P&amp;L</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Workspace</div>
+      <button type="button" class="tab-btn active" data-tab="pnl"><svg class="i"><use href="#i-chart"/></svg>Profit &amp; Loss</button>
+      <button type="button" class="tab-btn" data-tab="sales"><svg class="i"><use href="#i-file"/></svg>Sales invoices<span class="count" id="count-REVENUE" hidden></span></button>
+      <button type="button" class="tab-btn" data-tab="cogs"><svg class="i"><use href="#i-tank"/></svg>COGS<span class="count" id="count-COGS" hidden></span></button>
+      <button type="button" class="tab-btn" data-tab="shipping"><svg class="i"><use href="#i-ship"/></svg>Shipping<span class="count" id="count-SHIPPING" hidden></span></button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="sources" id="sources">
+        <div class="sources-title"><span>Data sources</span><span id="sourcesSummary"></span></div>
+        <div id="sourcesList"></div>
+      </div>
+      <button type="button" class="theme-toggle" id="themeToggle"></button>
+      <div class="user-chip" id="userChip" hidden></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="ticker" aria-label="Live ticker">
+      <div class="ticker-label"><span class="live-dot"></span><span class="t" id="tickerLabel">Live</span></div>
+      <div class="ticker-viewport"><div class="ticker-track" id="tickerTrack"></div></div>
+    </div>
+    <div class="content">
+      <!-- ================= P&L ================= -->
+      <section class="tab-panel" id="tab-pnl">
+        <div class="page-head">
+          <div>
+            <div class="title-row">
+              <h1 class="page-title">Profit &amp; Loss</h1>
+              <span class="live-badge" title="Refreshes automatically every 30 seconds"><span class="live-dot"></span>LIVE</span>
+            </div>
+            <div class="page-sub"><span id="pnlSubtitle">Management P&amp;L · consolidated in USD</span> · <span class="updated num" id="updated">Loading…</span></div>
+          </div>
+          <div class="filters">
+            <label class="control"><span class="k">Entity</span><select id="entity"><option value="ALL">All entities</option></select></label>
+            <label class="control"><span class="k">BU</span><select id="bu"><option value="ALL">All BUs</option></select></label>
+            <label class="control" title="Profitability of one shipment: its sale invoice(s) with the COGS and shipping booked against them"><span class="k">Shipment</span><select id="shipment"><option value="ALL">All shipments</option></select></label>
+            <div class="period-picker" id="monthPicker">
+              <button type="button" class="control month-btn" id="monthBtn" aria-label="Choose whole months"><span class="k">Months</span><span class="v" id="monthLabel">—</span></button>
+              <div class="period-panel month-panel" id="monthPanel" hidden>
+                <div class="period-panel-header">
+                  <button type="button" class="year-nav" data-dir="-1" aria-label="Previous year">‹</button>
+                  <span class="year-label" id="monthYearLabel"></span>
+                  <button type="button" class="year-nav" data-dir="1" aria-label="Next year">›</button>
+                </div>
+                <div class="month-grid" id="monthGrid"></div>
+                <div class="month-hint" id="monthHint">Click a month, or click two months for the span between them.</div>
+              </div>
+            </div>
+            <div class="segmented" id="presets" role="group" aria-label="Period presets">
+              <button type="button" data-preset="MTD">MTD</button>
+              <button type="button" data-preset="QTD">QTD</button>
+              <button type="button" data-preset="YTD">YTD</button>
+              <button type="button" data-preset="ALL">All</button>
+            </div>
+            <div class="control range">
+              <div class="period-picker" id="periodFromPicker">
+                <button type="button" class="period-btn num" id="periodFromBtn" aria-label="From date">—</button>
+                <div class="period-panel" id="periodFromPanel" hidden>
+                  <div class="period-panel-header">
+                    <button type="button" class="year-nav" data-dir="-1" aria-label="Previous month">‹</button>
+                    <span class="year-label" id="periodFromYearLabel"></span>
+                    <button type="button" class="year-nav" data-dir="1" aria-label="Next month">›</button>
+                  </div>
+                  <div class="weekday-row"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+                  <div class="day-grid" id="periodFromGrid"></div>
+                </div>
+              </div>
+              <span class="sep">→</span>
+              <div class="period-picker" id="periodToPicker">
+                <button type="button" class="period-btn num" id="periodToBtn" aria-label="To date">—</button>
+                <div class="period-panel" id="periodToPanel" hidden>
+                  <div class="period-panel-header">
+                    <button type="button" class="year-nav" data-dir="-1" aria-label="Previous month">‹</button>
+                    <span class="year-label" id="periodToYearLabel"></span>
+                    <button type="button" class="year-nav" data-dir="1" aria-label="Next month">›</button>
+                  </div>
+                  <div class="weekday-row"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+                  <div class="day-grid" id="periodToGrid"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="banner" id="banner"></div>
+
+        <div class="hero" id="hero"></div>
+
+        <div class="board">
+          <div class="card chart-card">
+            <div class="card-head">
+              <div class="chart-quote" id="chartQuote"></div>
+              <div class="segmented small" id="chartTabs" role="tablist" aria-label="Chart metric">
+                <button type="button" data-metric="gpt">GP / t</button>
+                <button type="button" data-metric="asp">ASP / t</button>
+                <button type="button" data-metric="cogst">COGS / t</button>
+                <button type="button" data-metric="revenue">Revenue</button>
+                <button type="button" data-metric="gp">Gross Profit</button>
+                <button type="button" data-metric="tonnes">Tonnes</button>
+                <button type="button" data-metric="gm">GM %</button>
+              </div>
+            </div>
+            <div class="chart" id="chart"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2 class="card-title">Per tonne</h2><span class="card-hint" id="momLabel"></span></div>
+            <div class="quotes" id="quotes"></div>
+          </div>
+        </div>
+
+        <div class="card section-gap">
+          <div class="card-head">
+            <h2 class="card-title">Entities</h2>
+            <span class="card-hint">Click a row to filter · MoM = latest month vs the one before</span>
+          </div>
+          <div class="table-wrap">
+            <table class="markets">
+              <thead><tr><th>Entity</th><th>GP / t</th><th>MoM</th><th>ASP / t</th><th>COGS / t</th><th>Tonnes</th><th>Revenue</th><th>GM %</th><th>Trend</th></tr></thead>
+              <tbody id="marketsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2 class="card-title">Statement</h2>
+            <span class="card-hint" id="statementHint"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="statement">
+              <thead><tr><th>Line</th><th>Amount (USD)</th><th>USD / t sold</th><th class="target-cell">vs monthly target</th></tr></thead>
+              <tbody id="pnlBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= Invoices ================= -->
+      <section class="tab-panel" id="tab-invoices" hidden>
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" id="wsTitle">Sales invoices</h1>
+            <div class="page-sub" id="wsSub"></div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="card stat"><div class="stat-icon warn"><svg class="i"><use href="#i-inbox"/></svg></div><div><div class="stat-value num" id="statPending">0</div><div class="stat-label">Awaiting review</div></div></div>
+          <div class="card stat"><div class="stat-icon" id="statRunningIcon"><svg class="i"><use href="#i-cog"/></svg></div><div><div class="stat-value num" id="statRunning">0</div><div class="stat-label" id="statRunningLabel">Parsing on GitHub</div></div></div>
+          <div class="card stat"><div class="stat-icon good"><svg class="i"><use href="#i-check"/></svg></div><div><div class="stat-value num" id="statBooked">—</div><div class="stat-label">Booked to P&amp;L</div></div></div>
+        </div>
+
+        <div class="card mailbox" id="mailbox"></div>
+
+        <div id="coverageBox" hidden>
+          <div class="section-title" id="coverageTitle">Coverage by sale</div>
+          <div class="card">
+            <div class="table-wrap">
+              <table id="coverageTable">
+                <thead><tr><th>Sale invoice</th><th>Entity / BU</th><th>Sale date</th><th>Tonnes</th><th>Revenue</th><th id="covAmountTh">Cost</th><th id="covPerTTh">Cost / t</th><th>Status</th></tr></thead>
+                <tbody id="coverageBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="revenueOnly">
+        <div class="dropzone compact" id="dropzone" role="button" tabindex="0">
+          <div class="dz-icon"><svg class="i"><use href="#i-upload"/></svg></div>
+          <div>
+            <div class="dz-title">Or drop a PDF here</div>
+            <div class="dz-sub">For an invoice that didn't come by email. Same worker, same review.</div>
+          </div>
+          <span class="btn dz-cta">Browse files</span>
+          <input type="file" id="invoiceFile" accept="application/pdf" hidden />
+        </div>
+        <div class="inbox-note" id="inboxNote"></div>
+
+        <div class="card invoice-review" id="invoiceReview" hidden></div>
+        <div id="githubJobList"></div>
+        </div>
+
+        <div class="section-title" id="pendingTitle" hidden>Awaiting review <span class="chip warn" id="pendingChip"></span></div>
+        <div id="inboxPendingList"></div>
+
+        <div class="section-title">Archive</div>
+        <div class="card">
+          <div class="table-wrap">
+            <table id="archiveTable">
+              <thead><tr><th>Received</th><th>Type</th><th>Invoice</th><th>Entity / BU</th><th>Product</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody id="archiveBody"><tr><td colspan="7" class="archive-empty">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <footer id="footer"></footer>
+    </div>
+  </main>
+</div>
+
+<script>
+// --- Server access ------------------------------------------------------------
+// Served by the Pulse server: same-origin /api/... (Cloudflare Access signs in).
+// Static page: Supabase Auth (Google) and the pulse-api Edge Function, with the
+// access token on every call. Access is checked server-side on every call.
+const meta = (n) => document.querySelector(`meta[name="${n}"]`)?.content || '';
+const PULSE_API = meta('pulse-api');
+let sb = null;
+let me = null; // { email, displayName, role } once signed in
+
+async function authHeaders() {
+  if (!sb) return {};
+  const { data: { session } } = await sb.auth.getSession(); // refreshes an expired token
+  return session ? { Authorization: `Bearer ${session.access_token}` } : {};
+}
+
+/** fetch() for '/api/...' paths, wherever this page is served from. */
+async function pulseFetch(path, init = {}) {
+  if (!PULSE_API) return fetch(path, init);
+  const r = await fetch(PULSE_API + path.replace(/^\/api/, ''), { ...init, headers: { ...(init.headers || {}), ...(await authHeaders()) } });
+  if (r.status === 401) showSignIn('Your session ended - sign in again.');
+  return r;
+}
+
+function showSignIn(message) {
+  document.getElementById('signin').hidden = false;
+  document.getElementById('signinMsg').textContent = message || '';
+}
+
+/** Static page: makes sure someone with Pulse access is signed in. false = wait for sign-in. */
+async function ensureSignedIn() {
+  if (!PULSE_API) return true;
+  await new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    el.onload = resolve;
+    el.onerror = () => reject(new Error('Could not load the sign-in library.'));
+    document.head.appendChild(el);
+  });
+  sb = supabase.createClient(meta('pulse-supabase-url'), meta('pulse-supabase-key'), { auth: { flowType: 'pkce', detectSessionInUrl: false } });
+  document.getElementById('signinBtn').onclick = () => sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: location.origin + location.pathname, queryParams: { hd: 'tagaddod.com', prompt: 'select_account' } },
+  });
+  // Back from Google: ?code=... becomes a session; ?error_description=... is a refusal (not on the Pulse list).
+  const params = new URLSearchParams(location.search);
+  const refused = params.get('error_description');
+  if (params.has('code')) await sb.auth.exchangeCodeForSession(params.get('code')).catch(() => {});
+  if (params.has('code') || refused) history.replaceState(null, '', location.pathname + location.hash);
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { showSignIn(refused || ''); return false; }
+  const r = await pulseFetch('/api/whoami');
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    await sb.auth.signOut();
+    showSignIn(body.error || 'Sign-in failed.');
+    return false;
+  }
+  me = body;
+  const chip = document.getElementById('userChip');
+  chip.innerHTML = `<span><strong>${escapeHtml(me.displayName)}</strong> &middot; ${escapeHtml(me.role)}</span><button type="button" id="signOut">Sign out</button>`;
+  chip.hidden = false;
+  document.getElementById('signOut').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  return true;
+}
+
+// PDFs: a plain link on the server; on the static page fetched with the token and shown from memory.
+document.addEventListener('click', async (e) => {
+  const a = e.target.closest('a[data-pdf]');
+  if (!a || !PULSE_API) return;
+  e.preventDefault();
+  const win = window.open('', '_blank'); // opened inside the click, so pop-up blockers allow it
+  const r = await pulseFetch(`/api/invoices/pdf?token=${encodeURIComponent(a.dataset.pdf)}`);
+  if (!r.ok) { win?.close(); alert('Could not open the PDF.'); return; }
+  const url = URL.createObjectURL(await r.blob());
+  if (win) win.location = url; else location.assign(url);
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+});
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fmtUsd = (n) => (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+const fmtNum = (n, d) => n == null ? '—' : n.toLocaleString('en-US', { maximumFractionDigits: d ?? 0 });
+// Statement style: costs in parentheses, no currency symbol.
+const fmtAcct = (n) => n == null ? '—' : Math.round(n) === 0 ? '–' : (n < 0 ? `(${Math.abs(Math.round(n)).toLocaleString('en-US')})` : Math.round(n).toLocaleString('en-US'));
+// Compact headline figures: $36.6M, $820K.
+function fmtCompact(n) {
+  if (n == null) return '—';
+  const a = Math.abs(n), s = n < 0 ? '-' : '';
+  if (a >= 1e9) return `${s}$${(a / 1e9).toFixed(2)}B`;
+  if (a >= 1e6) return `${s}$${(a / 1e6).toFixed(a >= 1e8 ? 0 : 1)}M`;
+  if (a >= 1e4) return `${s}$${(a / 1e3).toFixed(0)}K`;
+  return `${s}$${Math.round(a).toLocaleString('en-US')}`;
+}
+const pct1 = (p) => p == null ? '—' : `${p.toFixed(1)}%`;
+const icon = (name) => `<svg class="i"><use href="#i-${name}"/></svg>`;
+
+function daysInMonth(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); } // m is 1-12
+function fmtDate(y, m, d) { return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`; }
+function shortDate(s) { const [y, m, d] = s.split('-').map(Number); return `${d} ${MONTHS[m - 1].slice(0, 3)} ${y}`; }
+function daysBetween(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 864e5) + 1; }
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Day-level calendar picker, bounded to [minDate, maxDate] (the actual
+// transaction date range) so only days with possible data are selectable.
+function createDatePicker({ btnEl, panelEl, gridEl, yearLabelEl, pickerEl, minDate, maxDate, initialValue, onChange }) {
+  let value = initialValue;
+  let [viewYear, viewMonth] = value.split('-').map(Number); // viewMonth 1-12
+
+  function addMonths(y, m, delta) {
+    const idx = (y * 12 + (m - 1)) + delta;
+    return [Math.floor(idx / 12), (idx % 12) + 1];
+  }
+
+  function render() {
+    btnEl.textContent = shortDate(value);
+    yearLabelEl.textContent = `${MONTHS[viewMonth - 1]} ${viewYear}`;
+    const [prevY, prevM] = addMonths(viewYear, viewMonth, -1);
+    const [nextY, nextM] = addMonths(viewYear, viewMonth, 1);
+    panelEl.querySelectorAll('.year-nav').forEach(btn => {
+      const dir = Number(btn.dataset.dir);
+      btn.disabled = dir < 0 ? fmtDate(prevY, prevM, daysInMonth(prevY, prevM)) < minDate
+                              : fmtDate(nextY, nextM, 1) > maxDate;
+    });
+    const firstWeekday = new Date(Date.UTC(viewYear, viewMonth - 1, 1)).getUTCDay(); // 0=Sun
+    const total = daysInMonth(viewYear, viewMonth);
+    let cells = '';
+    for (let i = 0; i < firstWeekday; i++) cells += '<button type="button" class="day-cell pad" tabindex="-1"></button>';
+    for (let d = 1; d <= total; d++) {
+      const dateStr = fmtDate(viewYear, viewMonth, d);
+      const disabled = dateStr < minDate || dateStr > maxDate;
+      const sel = dateStr === value ? ' selected' : '';
+      cells += `<button type="button" class="day-cell${sel}" data-date="${dateStr}" ${disabled ? 'disabled' : ''}>${d}</button>`;
+    }
+    gridEl.innerHTML = cells;
+  }
+
+  btnEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.period-panel').forEach(p => { if (p !== panelEl) p.hidden = true; });
+    panelEl.hidden = !panelEl.hidden;
+  });
+  panelEl.querySelectorAll('.year-nav').forEach(btn => {
+    btn.addEventListener('click', () => {
+      [viewYear, viewMonth] = addMonths(viewYear, viewMonth, Number(btn.dataset.dir));
+      render();
+    });
+  });
+  gridEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.day-cell');
+    if (!btn || btn.disabled || btn.classList.contains('pad')) return;
+    value = btn.dataset.date;
+    panelEl.hidden = true;
+    render();
+    onChange(value);
+  });
+  document.addEventListener('click', (e) => { if (!pickerEl.contains(e.target)) panelEl.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') panelEl.hidden = true; });
+
+  render();
+  return {
+    get value() { return value; },
+    set: (v) => { value = v; [viewYear, viewMonth] = v.split('-').map(Number); render(); },
+  };
+}
+
+let fromPicker, toPicker, dateBounds, dims;
+
+// Presets end at the latest transaction date, not today, so a stale feed
+// still shows a full period instead of an empty one.
+function presetRange(preset) {
+  const { minDate, maxDate } = dateBounds;
+  const [y, m] = maxDate.split('-').map(Number);
+  const start = {
+    MTD: fmtDate(y, m, 1),
+    QTD: fmtDate(y, Math.floor((m - 1) / 3) * 3 + 1, 1),
+    YTD: fmtDate(y, 1, 1),
+    ALL: minDate,
+  }[preset];
+  return [start < minDate ? minDate : start, maxDate];
+}
+
+// Whole-month selection: one click picks a month, a second click extends to a
+// span of months (either direction). Ranges run from the 1st to the month's
+// last day, so a month always reads as a whole month even where the data
+// starts or ends partway through it.
+const monthStart = (y, m) => fmtDate(y, m, 1);
+const monthEnd = (y, m) => fmtDate(y, m, daysInMonth(y, m));
+const ymOf = (d) => d.split('-').map(Number).slice(0, 2);
+const ymKey = (y, m) => y * 12 + (m - 1);
+let monthAnchor = null; // first click of a span, as [y, m]
+let monthViewYear = null;
+
+function wholeMonthRange() {
+  if (!fromPicker) return null;
+  const [fy, fm] = ymOf(fromPicker.value), [ty, tm] = ymOf(toPicker.value);
+  if (fromPicker.value !== monthStart(fy, fm) || toPicker.value !== monthEnd(ty, tm)) return null;
+  return [[fy, fm], [ty, tm]];
+}
+
+function monthLabelText() {
+  const r = wholeMonthRange();
+  if (!r) return 'Custom';
+  const [[fy, fm], [ty, tm]] = r;
+  const name = (m) => MONTHS[m - 1].slice(0, 3);
+  if (fy === ty && fm === tm) return `${name(fm)} ${fy}`;
+  return fy === ty ? `${name(fm)} – ${name(tm)} ${ty}` : `${name(fm)} ${fy} – ${name(tm)} ${ty}`;
+}
+
+function renderMonthPicker() {
+  if (!dateBounds) return;
+  document.getElementById('monthLabel').textContent = monthLabelText();
+  const [minY, minM] = ymOf(dateBounds.minDate), [maxY, maxM] = ymOf(dateBounds.maxDate);
+  if (monthViewYear == null) monthViewYear = ymOf(toPicker.value)[0];
+  monthViewYear = Math.min(Math.max(monthViewYear, minY), maxY);
+  document.getElementById('monthYearLabel').textContent = monthViewYear;
+  document.querySelectorAll('#monthPanel .year-nav').forEach(b => {
+    b.disabled = Number(b.dataset.dir) < 0 ? monthViewYear <= minY : monthViewYear >= maxY;
+  });
+  const sel = wholeMonthRange();
+  const lo = monthAnchor ? ymKey(...monthAnchor) : sel ? ymKey(...sel[0]) : null;
+  const hi = monthAnchor ? lo : sel ? ymKey(...sel[1]) : null;
+  let cells = '';
+  for (let m = 1; m <= 12; m++) {
+    const k = ymKey(monthViewYear, m);
+    const outside = k < ymKey(minY, minM) || k > ymKey(maxY, maxM); // no data that month
+    const cls = lo == null ? '' : k === lo || k === hi ? ' edge' : k > lo && k < hi ? ' in-range' : '';
+    cells += `<button type="button" class="month-cell${cls}" data-y="${monthViewYear}" data-m="${m}" ${outside ? 'disabled' : ''}>${MONTHS[m - 1].slice(0, 3)}</button>`;
+  }
+  document.getElementById('monthGrid').innerHTML = cells;
+  document.getElementById('monthHint').textContent = monthAnchor
+    ? `From ${MONTHS[monthAnchor[1] - 1].slice(0, 3)} ${monthAnchor[0]} — click the last month of the span, or the same month again.`
+    : 'Click a month, or click two months for the span between them.';
+}
+
+function applyMonths(a, b) {
+  const [first, last] = ymKey(...a) <= ymKey(...b) ? [a, b] : [b, a];
+  fromPicker.set(monthStart(...first));
+  toPicker.set(monthEnd(...last));
+  refresh();
+}
+
+document.getElementById('monthBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!fromPicker) return;
+  const panel = document.getElementById('monthPanel');
+  document.querySelectorAll('.period-panel').forEach(p => { if (p !== panel) p.hidden = true; });
+  monthAnchor = null;
+  monthViewYear = ymOf(toPicker.value)[0];
+  panel.hidden = !panel.hidden;
+  renderMonthPicker();
+});
+document.querySelectorAll('#monthPanel .year-nav').forEach(b => b.addEventListener('click', (e) => {
+  e.stopPropagation();
+  monthViewYear += Number(b.dataset.dir);
+  renderMonthPicker();
+}));
+document.getElementById('monthGrid').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const c = e.target.closest('.month-cell');
+  if (!c || c.disabled) return;
+  const ym = [Number(c.dataset.y), Number(c.dataset.m)];
+  if (!monthAnchor) {
+    monthAnchor = ym;          // show that month straight away...
+    applyMonths(ym, ym);
+    renderMonthPicker();
+  } else {
+    applyMonths(monthAnchor, ym); // ...and extend it on the second click
+    monthAnchor = null;
+    document.getElementById('monthPanel').hidden = true;
+  }
+});
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('monthPicker').contains(e.target)) {
+    document.getElementById('monthPanel').hidden = true;
+    monthAnchor = null;
+  }
+});
+
+function syncPresetButtons() {
+  renderMonthPicker();
+  // Several presets can cover the same range early in a year; light only the narrowest.
+  let found = false;
+  document.querySelectorAll('#presets button').forEach(b => {
+    const [f, t] = presetRange(b.dataset.preset);
+    const on = !found && f === fromPicker.value && t === toPicker.value;
+    found = found || on;
+    b.classList.toggle('on', on);
+  });
+}
+
+document.getElementById('presets').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-preset]');
+  if (!b || !fromPicker) return;
+  const [f, t] = presetRange(b.dataset.preset);
+  fromPicker.set(f); toPicker.set(t);
+  refresh();
+});
+
+async function loadDimensions() {
+  const d = await (await pulseFetch('/api/dimensions')).json();
+  dims = d;
+  // Called again until the first booking exists, so fill the filters only once.
+  const entitySel = document.getElementById('entity');
+  const buSel = document.getElementById('bu');
+  if (entitySel.options.length === 1) {
+    d.entities.forEach(e => entitySel.add(new Option(`${e.code} · ${e.country}`, e.code)));
+    d.businessUnits.forEach(b => buSel.add(new Option(b.name, b.code)));
+  }
+
+  fillShipments();
+
+  if (d.dateRange.minDate && d.dateRange.maxDate) {
+    dateBounds = d.dateRange;
+    const { minDate, maxDate } = d.dateRange;
+    // Keep From <= To: moving one past the other drags the other along.
+    const onFrom = (v) => { if (v > toPicker.value) toPicker.set(v); refresh(); };
+    const onTo = (v) => { if (v < fromPicker.value) fromPicker.set(v); refresh(); };
+    fromPicker = createDatePicker({
+      btnEl: document.getElementById('periodFromBtn'), panelEl: document.getElementById('periodFromPanel'),
+      gridEl: document.getElementById('periodFromGrid'), yearLabelEl: document.getElementById('periodFromYearLabel'),
+      pickerEl: document.getElementById('periodFromPicker'),
+      minDate, maxDate, initialValue: minDate, onChange: onFrom,
+    });
+    toPicker = createDatePicker({
+      btnEl: document.getElementById('periodToBtn'), panelEl: document.getElementById('periodToPanel'),
+      gridEl: document.getElementById('periodToGrid'), yearLabelEl: document.getElementById('periodToYearLabel'),
+      pickerEl: document.getElementById('periodToPicker'),
+      minDate, maxDate, initialValue: maxDate, onChange: onTo,
+    });
+  }
+}
+
+// Shipment filter: one option per shipment (split invoices -01/-02 are one
+// shipment), limited to the chosen entity. Keeps the selection if it still exists.
+function fillShipments() {
+  const sel = document.getElementById('shipment');
+  const entity = document.getElementById('entity').value;
+  const keep = sel.value;
+  const list = (dims?.shipments || []).filter(s => entity === 'ALL' || s.entityCode === entity);
+  sel.innerHTML = '<option value="ALL">All shipments</option>' + list.map(s => {
+    const parts = s.invoices.length > 1 ? ` (${s.invoices.length} invoices)` : '';
+    const t = s.tonnes ? ` · ${fmtNum(s.tonnes, 0)} t` : '';
+    return `<option value="${escapeHtml(s.key)}" title="${escapeHtml(s.invoices.join(', '))}">${escapeHtml(s.key)}${parts} · ${escapeHtml(s.entityCode)} · ${shortDate(s.saleDate)}${t}</option>`;
+  }).join('');
+  sel.value = list.some(s => s.key === keep) ? keep : 'ALL';
+}
+
+// New bookings add shipments: refresh the list each cycle (cheap: one query).
+async function refreshShipments() {
+  try {
+    const d = await (await pulseFetch('/api/dimensions')).json();
+    if (dims) dims.shipments = d.shipments;
+    fillShipments();
+  } catch { /* keep the current list */ }
+}
+
+// --- Data sources panel ------------------------------------------------------
+// What actually feeds the P&L today: the three Pulse email groups (via Gmail),
+// each with its booking count; then the system feeds still to be connected.
+let healthSources = [], lastMail = null, bookedByKind = {};
+// Short labels for the narrow panel, in the order the P&L needs them; full names in the tooltip.
+const PLANNED = { FLOW: 'trading', SOS: 'inventory', OPEX_LEDGER: 'expenses', GL: 'ledger' };
+const FEED_ORDER = ['FLOW', 'SOS', 'OPEX_LEDGER', 'GL'];
+
+async function refreshBookedCounts() {
+  try {
+    const rows = await (await pulseFetch('/api/invoices/archive')).json();
+    bookedByKind = {};
+    for (const r of rows) if (r.status === 'INGESTED') bookedByKind[kindOf(r)] = (bookedByKind[kindOf(r)] || 0) + 1;
+    renderSources();
+  } catch {}
+}
+
+function renderSources() {
+  const m = lastMail;
+  const groups = m && m.configured ? m.groups : [];
+  const mailOk = m && m.configured && !m.lastError;
+  const feeds = healthSources.filter(s => s.code !== 'MANUAL_EMAIL_INVOICE')
+    .sort((a, b) => (FEED_ORDER.indexOf(a.code) + 99) % 99 - (FEED_ORDER.indexOf(b.code) + 99) % 99);
+  const liveFeeds = feeds.filter(s => s.isConnected).length;
+  const live = (mailOk ? groups.length : 0) + liveFeeds;
+  document.getElementById('sourcesSummary').textContent = `${live}/${groups.length + feeds.length} live`;
+
+  const groupRows = groups.length ? groups.map(g => {
+    const K = KINDS[g.kind], n = bookedByKind[g.kind] || 0;
+    const addr = g.address.split('@')[0];
+    const title = `${g.address} → ${K.label}. ${n} booked. ${mailOk ? 'Checked by Gmail every few minutes.' : m.lastError || ''}`;
+    return `<div class="source-row" title="${escapeHtml(title)}"><span class="dot ${mailOk ? 'on' : 'err'}"></span>
+      <span class="name">${escapeHtml(K.label)} <span style="color:var(--faint)">· ${escapeHtml(addr)}</span></span>
+      <span class="tag ${mailOk ? 'live' : 'err'}">${mailOk ? n : 'error'}</span></div>`;
+  }).join('') : `<div class="source-row" title="Add GMAIL_* to .env and run npm run gmail:auth"><span class="dot"></span><span class="name">Email intake</span><span class="tag">not set up</span></div>`;
+
+  const feedRows = feeds.map(s => `<div class="source-row" title="${escapeHtml(s.name)}${s.notes ? ' — ' + escapeHtml(s.notes) : ''}">
+      <span class="dot ${s.isConnected ? 'on' : 'planned'}"></span>
+      <span class="name">${escapeHtml(s.code === 'OPEX_LEDGER' ? 'OPEX' : s.code)} <span style="color:var(--faint)">· ${escapeHtml(PLANNED[s.code] || s.category.toLowerCase())}</span></span>
+      <span class="tag ${s.isConnected ? 'live' : ''}">${s.isConnected ? 'live' : 'planned'}</span></div>`).join('');
+
+  const checked = m && m.lastCheckedAt ? new Date(m.lastCheckedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : null;
+  const foot = !m || !m.configured ? '' : m.lastError ? `<span style="color:var(--neg)">Gmail: ${escapeHtml(m.lastError).slice(0, 60)}</span>`
+    : `Gmail checked ${checked || '—'} · ${escapeHtml(m.mailbox)}`;
+  document.getElementById('sourcesList').innerHTML =
+    `<div class="sources-sub">Email groups · bookings</div>${groupRows}` +
+    `<div class="sources-sub">System feeds</div>${feedRows}` +
+    (foot ? `<div class="sources-foot">${foot}</div>` : '');
+}
+
+async function loadHealth() {
+  const sources = await (await pulseFetch('/api/health')).json();
+  healthSources = sources;
+  const manual = (s) => s.accessMethod === 'MANUAL_UPLOAD';
+  const demo = sources.filter(s => !s.isConnected && s.accessMethod === 'DEMO_SYNTHETIC');
+  const offline = sources.filter(s => !s.isConnected && !manual(s) && s.accessMethod !== 'DEMO_SYNTHETIC');
+  renderSources();
+
+  const banner = document.getElementById('banner');
+  const codes = (list) => list.map(s => escapeHtml(s.code)).join(', ');
+  const footer = document.getElementById('footer');
+  if (demo.length) {
+    banner.classList.add('show');
+    banner.innerHTML = `${icon('alert')}<span><strong>Demo data.</strong> Synthetic figures from ${codes(demo)}. Figures are illustrative.</span>`;
+    footer.textContent = `Synthetic demo data from ${demo.map(s => s.code).join(' / ')}`;
+  } else if (offline.length) {
+    banner.classList.add('show');
+    banner.innerHTML = `${icon('alert')}<span><strong>Partial P&amp;L.</strong> Revenue, COGS and shipping come from the Pulse email groups. Not connected yet: ${codes(offline).replace('OPEX_LEDGER', 'OPEX')} &mdash; operating expenses and below-EBITDA costs are not on the P&amp;L yet, and a sale without its COGS / shipping statement shows as margin.</span>`;
+    footer.hidden = true;
+  } else {
+    footer.hidden = true;
+  }
+}
+
+// --- Live market layer ------------------------------------------------------
+// Every figure comes from /api/pnl; series are built by asking for one month
+// (or week/day) at a time. Calls are cached per refresh cycle so the ticker,
+// cards and entities table share them.
+const LIVE_MS = 30000;
+let apiCache = new Map();
+function api(p) {
+  const q = { entity: p.entity, bu: p.bu, shipment: p.shipment || 'ALL', dateFrom: p.dateFrom, dateTo: p.dateTo };
+  const qs = new URLSearchParams(q).toString();
+  if (!apiCache.has(qs)) apiCache.set(qs, PULSE_API ? batchedPnl(q) : pulseFetch(`/api/pnl?${qs}`).then(r => r.json()));
+  return apiCache.get(qs);
+}
+
+// Static page: every P&L view asked for in the same moment goes to the server
+// as one /api/pnl/batch call - each call to Supabase costs a round trip.
+let pnlQueue = [];
+function batchedPnl(q) {
+  return new Promise((resolve, reject) => {
+    pnlQueue.push({ q, resolve, reject });
+    if (pnlQueue.length === 1) setTimeout(flushPnlQueue, 0);
+  });
+}
+async function flushPnlQueue() {
+  const batch = pnlQueue;
+  pnlQueue = [];
+  for (let i = 0; i < batch.length; i += 200) {
+    const part = batch.slice(i, i + 200);
+    try {
+      const r = await pulseFetch('/api/pnl/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ queries: part.map(b => b.q) }),
+      });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+      part.forEach((b, j) => b.resolve(body[j]));
+    } catch (err) {
+      part.forEach(b => b.reject(err));
+    }
+  }
+}
+
+const lineOf = (r, code) => r.pnlLines.find(l => l.pnlLineCode === code);
+const fmtPerT = (v) => v == null ? '—' : fmtUsd(Math.round(v));
+const fmtT = (v) => v == null ? '—' : `${fmtNum(v, 0)} t`;
+// kind: 'usd' amounts, 'pt' per-tonne prices, 't' tonnes, 'pct' ratios (change shown in pp).
+// goodUp: whether a rise is good news, which sets green/red.
+const METRICS = {
+  revenue: { label: 'Revenue', get: r => lineOf(r, 'REVENUE')?.amountUsd, fmt: fmtCompact, kind: 'usd', goodUp: true },
+  gp: { label: 'Gross Profit', get: r => lineOf(r, 'GROSS_PROFIT')?.amountUsd, fmt: fmtCompact, kind: 'usd', goodUp: true },
+  cp: { label: 'Contribution Profit', get: r => lineOf(r, 'CONTRIBUTION_PROFIT')?.amountUsd, fmt: fmtCompact, kind: 'usd', goodUp: true },
+  ebitda: { label: 'EBITDA', get: r => lineOf(r, 'EBITDA')?.amountUsd, fmt: fmtCompact, kind: 'usd', goodUp: true },
+  gpt: { label: 'GP / t', get: r => r.kpis.grossProfitPerTonne, fmt: fmtPerT, kind: 'pt', goodUp: true },
+  asp: { label: 'ASP / t', get: r => r.kpis.avgSellingPricePerTonne, fmt: fmtPerT, kind: 'pt', goodUp: true },
+  cogst: { label: 'COGS / t', get: r => r.kpis.cogsPerTonne, fmt: fmtPerT, kind: 'pt', goodUp: false },
+  shipt: { label: 'Shipping / t', get: r => r.kpis.shippingCostPerTonne, fmt: fmtPerT, kind: 'pt', goodUp: false },
+  tonnes: { label: 'Tonnes sold', get: r => r.kpis.tonnesSold, fmt: fmtT, kind: 't', goodUp: true },
+  gm: { label: 'Gross margin', get: r => lineOf(r, 'GROSS_MARGIN')?.marginPct, fmt: pct1, kind: 'pct', goodUp: true },
+  cm: { label: 'Contribution margin', get: r => lineOf(r, 'CONTRIBUTION_MARGIN')?.marginPct, fmt: pct1, kind: 'pct', goodUp: true },
+  em: { label: 'EBITDA margin', get: r => lineOf(r, 'EBITDA_MARGIN')?.marginPct, fmt: pct1, kind: 'pct', goodUp: true },
+};
+const val = (m, r) => (r ? METRICS[m].get(r) ?? null : null);
+
+function change(cur, prev, metric) {
+  const m = METRICS[metric];
+  if (cur == null || prev == null) return null;
+  const abs = cur - prev;
+  const pct = m.kind === 'pct' || prev === 0 ? null : (abs / Math.abs(prev)) * 100;
+  const flat = Math.abs(abs) < 1e-9;
+  const tone = flat ? 'flat' : (abs > 0) === m.goodUp ? 'good' : 'bad';
+  const arrow = flat ? '■' : abs > 0 ? '▲' : '▼';
+  const text = m.kind === 'pct' ? `${arrow} ${Math.abs(abs).toFixed(1)}pp`
+    : pct == null ? arrow : `${arrow} ${Math.abs(pct).toFixed(1)}%`;
+  return { abs, pct, tone, text };
+}
+const chgHtml = (c, pill) => c ? `<span class="chg ${pill ? 'chg-pill ' : ''}${c.tone}">${c.text}</span>` : '<span class="chg flat">—</span>';
+
+function addDays(s, n) { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+const monShort = (s) => MONTHS[Number(s.slice(5, 7)) - 1].slice(0, 3);
+const dayShort = (s) => `${Number(s.slice(8, 10))} ${monShort(s)}`;
+
+// Up to six calendar months ending at dateTo, clipped to the data range.
+function monthBuckets(dateTo, n = 6) {
+  const out = [];
+  let [y, m] = dateTo.split('-').map(Number);
+  for (let i = 0; i < n; i++) {
+    const first = fmtDate(y, m, 1), last = fmtDate(y, m, daysInMonth(y, m));
+    const from = first < dateBounds.minDate ? dateBounds.minDate : first;
+    const to = last > dateTo ? dateTo : last;
+    if (to >= dateBounds.minDate) out.unshift({ dateFrom: from, dateTo: to, label: monShort(first) });
+    if (--m === 0) { m = 12; y--; }
+  }
+  return out;
+}
+
+// Daily points for short ranges, weekly otherwise.
+function chartBuckets(from, to) {
+  const step = daysBetween(from, to) <= 45 ? 1 : 7;
+  const out = [];
+  for (let s = from; s <= to; s = addDays(s, step)) {
+    const e = addDays(s, step - 1);
+    out.push({ dateFrom: s, dateTo: e > to ? to : e });
+  }
+  return { step, buckets: out };
+}
+
+function spark(values, tone) {
+  const pts = values.map((v, i) => [i, v]).filter(p => p[1] != null);
+  if (pts.length < 2) return '';
+  const W = 100, H = 30, lo = Math.min(...pts.map(p => p[1])), hi = Math.max(...pts.map(p => p[1]));
+  const span = hi - lo || 1, n = values.length - 1 || 1;
+  const xy = pts.map(([i, v]) => [(i / n) * W, H - 3 - ((v - lo) / span) * (H - 6)]);
+  const line = xy.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(2)},${p[1].toFixed(2)}`).join('');
+  const area = `${line}L${xy.at(-1)[0].toFixed(2)},${H}L${xy[0][0].toFixed(2)},${H}Z`;
+  return `<svg class="spark ${tone}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path class="a" d="${area}"/><path class="l" d="${line}"/></svg>`;
+}
+function trendTone(values, metric) {
+  const v = values.filter(x => x != null);
+  if (v.length < 2 || v[0] === v.at(-1)) return 'flat';
+  return (v.at(-1) > v[0]) === METRICS[metric].goodUp ? 'good' : 'bad';
+}
+
+// Values flash green/red when a live refresh changes them. Changing a
+// filter resets the memory so a new view never flashes as if it moved.
+const lastSeen = new Map();
+let lastViewKey = '';
+function applyFlashes(root) {
+  root.querySelectorAll('[data-fk]').forEach(el => {
+    const key = el.dataset.fk, v = el.dataset.fv === '' ? null : Number(el.dataset.fv);
+    const prev = lastSeen.get(key);
+    lastSeen.set(key, v);
+    if (prev == null || v == null || prev === v) return;
+    el.classList.remove('flash-up', 'flash-down');
+    void el.offsetWidth;
+    el.classList.add(v > prev ? 'flash-up' : 'flash-down');
+  });
+}
+const fk = (key, v) => `data-fk="${key}" data-fv="${v ?? ''}"`;
+
+let view = null;           // everything the last refresh fetched
+let chartMetric = 'gpt';
+
+async function loadView() {
+  const entity = document.getElementById('entity').value;
+  const bu = document.getElementById('bu').value;
+  const shipment = document.getElementById('shipment').value;
+  const dateFrom = fromPicker.value, dateTo = toPicker.value;
+  apiCache = new Map();
+  const months = monthBuckets(dateTo);
+  const { step, buckets } = chartBuckets(dateFrom, dateTo);
+  const entities = dims.entities.map(e => e.code);
+  const [main, monthly, series, ents] = await Promise.all([
+    api({ entity, bu, shipment, dateFrom, dateTo }),
+    Promise.all(months.map(b => api({ entity, bu, shipment, ...b }))),
+    Promise.all(buckets.map(b => api({ entity, bu, shipment, ...b }))),
+    // Asked for all at once, so the static page sends them in one batch.
+    Promise.all(entities.map(async code => {
+      const [total, monthly] = await Promise.all([
+        api({ entity: code, bu, shipment, dateFrom, dateTo }),
+        Promise.all(months.map(b => api({ entity: code, bu, shipment, ...b }))),
+      ]);
+      return { code, total, monthly };
+    })),
+  ]);
+  return { entity, bu, shipment, dateFrom, dateTo, main, months, monthly, step, buckets, series, ents };
+}
+
+function mom(monthly, metric) {
+  const n = monthly.length;
+  if (n < 2) return null;
+  return change(val(metric, monthly[n - 1]), val(metric, monthly[n - 2]), metric);
+}
+function momLabel(v) {
+  const n = v.months.length;
+  return n < 2 ? '' : `${v.months[n - 1].label} vs ${v.months[n - 2].label}`;
+}
+
+function renderTicker(v) {
+  const group = ['revenue', 'gp', 'gpt', 'asp', 'cogst', 'gm', 'tonnes'].map(m => {
+    const cur = val(m, v.monthly.at(-1));
+    return `<div class="tick" title="${METRICS[m].label}, ${momLabel(v)}"><span class="n">${METRICS[m].label}</span><span class="v num">${METRICS[m].fmt(cur)}</span>${chgHtml(mom(v.monthly, m))}</div>`;
+  });
+  const ents = v.ents.map(e => {
+    const cur = val('gpt', e.monthly.at(-1));
+    return `<div class="tick" title="${e.code} gross profit per tonne, ${momLabel(v)}"><span class="n">${e.code} GP/t</span><span class="v num">${fmtPerT(cur)}</span>${chgHtml(mom(e.monthly, 'gpt'))}</div>`;
+  });
+  const items = [...group, ...ents].join('');
+  const track = document.getElementById('tickerTrack');
+  track.innerHTML = items + items; // doubled so the loop is seamless
+  track.style.setProperty('--dur', `${Math.max(30, (group.length + ents.length) * 4)}s`);
+  document.getElementById('tickerLabel').textContent = momLabel(v) ? `MoM · ${momLabel(v)}` : 'Live';
+}
+
+function renderHero(v) {
+  const L = lineMap(v.main.pnlLines);
+  const card = (metric, code, marginCode) => {
+    const amt = L[code] ? L[code].amountUsd : null;
+    const m = marginCode && L[marginCode] ? L[marginCode].marginPct : null;
+    const t = v.main.targets ? v.main.targets[code] : undefined;
+    const tgt = t ? `<span class="tgt num">${Math.round((amt / t) * 100)}% of target</span>` : '';
+    const series = v.monthly.map(r => val(metric, r));
+    const chip = m != null ? `<span class="chip ${m < 0 ? 'bad' : 'good'} num">${pct1(m)}</span>` : '';
+    return `<div class="card metric">
+      <div class="metric-label">${METRICS[metric].label}${chip}</div>
+      <div class="metric-value num ${amt != null && amt < 0 ? 'neg' : ''}" title="${amt != null ? fmtUsd(Math.round(amt)) : ''}"><span ${fk('hero-' + metric, amt)}>${fmtCompact(amt)}</span></div>
+      <div class="metric-change">${chgHtml(mom(v.monthly, metric), true)}<span title="${momLabel(v)}">MoM</span>${tgt}</div>
+      ${spark(series, trendTone(series, metric))}
+    </div>`;
+  };
+  const el = document.getElementById('hero');
+  el.innerHTML = card('revenue', 'REVENUE') + card('gp', 'GROSS_PROFIT', 'GROSS_MARGIN') +
+    card('cp', 'CONTRIBUTION_PROFIT', 'CONTRIBUTION_MARGIN') + card('ebitda', 'EBITDA', 'EBITDA_MARGIN');
+}
+
+function renderQuotes(v) {
+  const k = v.main.kpis;
+  const rows = [
+    ['gpt', 'per t sold'],
+    ['asp', 'Revenue ÷ t sold'],
+    ['cogst', 'per t sold'],
+    ['shipt', 'per t sold'],
+    ['tonnes', `${fmtNum(k.tonnesProcuredOrRecognized, 0)} t procured / recognised`],
+    ['gm', 'Gross profit ÷ revenue'],
+  ];
+  document.getElementById('momLabel').textContent = momLabel(v) ? `MoM · ${momLabel(v)}` : '';
+  document.getElementById('quotes').innerHTML = rows.map(([m, note]) => {
+    const cur = val(m, v.main);
+    return `<div class="quote">
+      <span class="ql">${METRICS[m].label}</span><span class="qv num"><span ${fk('q-' + m, cur)}>${METRICS[m].fmt(cur)}</span></span>
+      <span class="qn">${note}</span><span class="qc">${chgHtml(mom(v.monthly, m))}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMarkets(v) {
+  const names = Object.fromEntries(dims.entities.map(e => [e.code, e]));
+  const rows = [...v.ents].sort((a, b) => (val('revenue', b.total) ?? 0) - (val('revenue', a.total) ?? 0));
+  document.getElementById('marketsBody').innerHTML = rows.map(e => {
+    const t = e.total, series = e.monthly.map(r => val('gpt', r));
+    const c = mom(e.monthly, 'gpt');
+    const n = names[e.code] || {};
+    return `<tr data-entity="${e.code}" class="${v.entity === e.code ? 'active' : ''}">
+      <td><div class="ent"><span class="flag">${e.code}</span><div><div class="ent-name">${escapeHtml(n.country || e.code)}</div><div class="ent-sub">${escapeHtml(n.name || '')}${n.businessUnitCode ? ' · ' + escapeHtml(n.businessUnitCode.charAt(0) + n.businessUnitCode.slice(1).toLowerCase()) : ''}</div></div></div></td>
+      <td class="strong"><span ${fk('m-gpt-' + e.code, val('gpt', t))}>${fmtPerT(val('gpt', t))}</span></td>
+      <td>${chgHtml(c)}</td>
+      <td>${fmtPerT(val('asp', t))}</td>
+      <td>${fmtPerT(val('cogst', t))}</td>
+      <td>${fmtNum(val('tonnes', t), 0)}</td>
+      <td><span ${fk('m-rev-' + e.code, val('revenue', t))}>${fmtCompact(val('revenue', t))}</span></td>
+      <td>${pct1(val('gm', t))}</td>
+      <td>${spark(series, trendTone(series, 'gpt'))}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" class="archive-empty">No entities.</td></tr>';
+}
+
+document.getElementById('marketsBody').addEventListener('click', (e) => {
+  const tr = e.target.closest('tr[data-entity]');
+  if (!tr) return;
+  const sel = document.getElementById('entity');
+  sel.value = sel.value === tr.dataset.entity ? 'ALL' : tr.dataset.entity; // click again to clear
+  fillShipments();
+  refresh();
+});
+
+function bucketLabel(v, b) {
+  return v.step === 1 ? dayShort(b.dateFrom) : `${dayShort(b.dateFrom)} – ${dayShort(b.dateTo)}`;
+}
+
+function renderChart() {
+  if (!view) return;
+  const v = view, m = METRICS[chartMetric];
+  document.querySelectorAll('#chartTabs button').forEach(b => b.classList.toggle('on', b.dataset.metric === chartMetric));
+  const host = document.getElementById('chart');
+  const vals = v.series.map(r => val(chartMetric, r));
+  const real = vals.map((y, i) => [i, y]).filter(p => p[1] != null);
+  const quote = document.getElementById('chartQuote');
+  if (!real.length) {
+    quote.innerHTML = `<span class="card-title">${m.label}</span>`;
+    host.innerHTML = '<div class="chart-empty">No data in this period</div>';
+    return;
+  }
+  const first = real[0][1], last = real.at(-1)[1];
+  const c = change(last, first, chartMetric);
+  const tone = c ? (c.tone === 'flat' ? 'good' : c.tone) : 'good';
+  const unit = v.step === 1 ? 'daily' : 'weekly';
+  quote.innerHTML = `<span class="card-title">${m.label}</span><span class="big num">${m.fmt(last)}</span>${chgHtml(c, true)}<span class="sub">${unit} · since ${dayShort(v.buckets[real[0][0]].dateFrom)}</span>`;
+
+  const W = host.clientWidth || 800, H = host.clientHeight || 300;
+  const P = { l: 14, r: 84, t: 14, b: 28 };
+  let lo = Math.min(...real.map(p => p[1])), hi = Math.max(...real.map(p => p[1]));
+  if (lo === hi) { const d = Math.abs(lo) * 0.1 || 1; lo -= d; hi += d; }
+  const pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+  const n = Math.max(1, vals.length - 1);
+  const x = (i) => P.l + (i / n) * (W - P.l - P.r);
+  const y = (val) => P.t + ((hi - val) / (hi - lo)) * (H - P.t - P.b);
+
+  let grid = '', axis = '';
+  for (let k = 0; k <= 4; k++) {
+    const gv = lo + ((hi - lo) * k) / 4, gy = y(gv);
+    grid += `<line x1="${P.l}" x2="${W - P.r}" y1="${gy}" y2="${gy}"/>`;
+    if (Math.abs(gy - y(real.at(-1)[1])) > 16) axis += `<text x="${W - P.r + 10}" y="${gy + 4}">${m.fmt(gv)}</text>`;
+  }
+  const labelEvery = Math.max(1, Math.ceil(vals.length / 7));
+  vals.forEach((_, i) => {
+    if (i % labelEvery === 0) axis += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${dayShort(v.buckets[i].dateFrom)}</text>`;
+  });
+  const pts = real.map(([i, val]) => [x(i), y(val)]);
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('');
+  const area = `${line}L${pts.at(-1)[0].toFixed(1)},${H - P.b}L${pts[0][0].toFixed(1)},${H - P.b}Z`;
+  const [lx, ly] = pts.at(-1);
+  const gid = `g${Date.now()}`;
+
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="c-${tone}" role="img" aria-label="${m.label} ${unit} chart">
+      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="currentColor" stop-opacity="0.22"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/>
+      </linearGradient></defs>
+      <g class="grid">${grid}</g>
+      <path d="${area}" fill="url(#${gid})" class="${tone}" style="stroke:none"/>
+      <path d="${line}" class="line ${tone}"/>
+      <line class="last-line ${tone}" x1="${lx}" x2="${W - P.r + 4}" y1="${ly}" y2="${ly}"/>
+      <g class="axis">${axis}</g>
+      <g class="tag ${tone}"><rect x="${W - P.r + 4}" y="${ly - 11}" width="${P.r - 8}" height="22" rx="5"/><text x="${W - P.r + 10}" y="${ly + 4}">${m.fmt(last)}</text></g>
+      <circle class="pulse-ring ${tone}" cx="${lx}" cy="${ly}" r="4"/>
+      <circle class="pulse ${tone}" cx="${lx}" cy="${ly}" r="4"/>
+      <line class="cross" x1="0" x2="0" y1="${P.t}" y2="${H - P.b}"/>
+      <circle class="hover-dot ${tone}" r="5" cx="0" cy="0"/>
+    </svg><div class="chart-tip"></div>`;
+
+  const svg = host.querySelector('svg'), cross = host.querySelector('.cross');
+  const dot = host.querySelector('.hover-dot'), tip = host.querySelector('.chart-tip');
+  host.onmousemove = (e) => {
+    const r = svg.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * W;
+    let best = real[0];
+    for (const p of real) if (Math.abs(x(p[0]) - px) < Math.abs(x(best[0]) - px)) best = p;
+    const [i, bv] = best, cx = x(i), cy = y(bv);
+    cross.setAttribute('x1', cx); cross.setAttribute('x2', cx);
+    dot.setAttribute('cx', cx); dot.setAttribute('cy', cy);
+    const prevIdx = real.findIndex(p => p[0] === i) - 1;
+    const step = prevIdx >= 0 ? change(bv, real[prevIdx][1], chartMetric) : null;
+    tip.innerHTML = `${bucketLabel(v, v.buckets[i])}<b>${m.fmt(bv)}</b>${step ? chgHtml(step) + ` <span style="opacity:.7">vs prior ${v.step === 1 ? 'day' : 'week'}</span>` : ''}`;
+    const left = (cx / W) * r.width;
+    tip.style.left = `${Math.min(Math.max(left, 90), r.width - 90)}px`;
+    host.classList.add('hovering');
+  };
+  host.onmouseleave = () => host.classList.remove('hovering');
+}
+
+document.getElementById('chartTabs').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-metric]');
+  if (!b) return;
+  chartMetric = b.dataset.metric;
+  try { localStorage.setItem('pulse-chart', chartMetric); } catch (err) {}
+  renderChart();
+});
+try { const saved = localStorage.getItem('pulse-chart'); if (saved && METRICS[saved]) chartMetric = saved; } catch (err) {}
+let resizeTimer;
+window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderChart, 120); });
+
+// --- Live refresh -------------------------------------------------------------
+let refreshing = false, nextRefreshAt = 0, lastUpdated = null;
+function tickClock() {
+  const el = document.getElementById('updated');
+  if (!lastUpdated) return;
+  const s = Math.max(0, Math.round((nextRefreshAt - Date.now()) / 1000));
+  el.textContent = `Updated ${lastUpdated.toLocaleTimeString('en-GB')} · next in ${s}s`;
+  const visible = !document.hidden && !document.getElementById('tab-pnl').hidden;
+  if (Date.now() >= nextRefreshAt && visible) refresh();
+}
+setInterval(tickClock, 1000);
+
+function lineMap(lines) { return Object.fromEntries(lines.map(l => [l.pnlLineCode, l])); }
+
+function targetTone(pct) { return pct >= 100 ? 'good' : pct >= 75 ? 'warn' : 'bad'; }
+
+function renderTargetCell(actualUsd, targetUsd) {
+  if (targetUsd == null) return '<td class="target-cell"></td>';
+  if (targetUsd === 0) return '<td class="target-cell"><span class="bar-label">No target set</span></td>';
+  const pct = (actualUsd / targetUsd) * 100;
+  const width = Math.max(0, Math.min(100, pct));
+  return `<td class="target-cell"><div class="bar">
+    <span class="bar-track"><span class="bar-fill ${targetTone(pct)}" style="width:${width}%"></span></span>
+    <span class="bar-label">${Math.round(pct)}% of ${fmtCompact(targetUsd)}</span>
+  </div></td>`;
+}
+
+function renderPnl(lines, targets, kpis) {
+  const tonnes = kpis.tonnesSold;
+  const prov = (l) => l.isProvisional ? '<span class="prov" title="Provisional — source period not yet closed"></span>' : '';
+  document.getElementById('pnlBody').innerHTML = lines.map(l => {
+    // Margin rows are a ratio of the line above, so they carry no target bar and
+    // sit under their profit line rather than reading as another amount.
+    if (l.isMarginPct) {
+      const neg = l.marginPct != null && l.marginPct < 0 ? 'neg' : '';
+      return `<tr class="margin-row"><td>${escapeHtml(l.label)}</td><td class="${neg}">${pct1(l.marginPct)}</td><td></td><td class="target-cell"></td></tr>`;
+    }
+    const isSub = l.lineType === 'SUBTOTAL';
+    const cls = isSub ? 'subtotal' + (l.pnlLineCode === 'NET_PROFIT' ? ' net' : '') : 'leaf';
+    // Costs read as parentheses; red is kept for a profit line that went negative.
+    const tone = l.amountUsd < 0 ? (isSub || l.pnlLineCode === 'REVENUE' ? 'neg' : 'cost') : '';
+    const perT = tonnes ? fmtAcct(l.amountUsd / tonnes) : '—';
+    return `<tr class="${cls}">
+      <td>${escapeHtml(l.label)}${prov(l)}</td>
+      <td class="${tone}"><span ${fk('s-' + l.pnlLineCode, l.amountUsd)}>${fmtAcct(l.amountUsd)}</span></td>
+      <td class="${tone} ${isSub ? '' : 'dim'}">${perT}</td>
+      ${renderTargetCell(l.amountUsd, targets ? targets[l.pnlLineCode] : undefined)}
+    </tr>`;
+  }).join('');
+  const anyProv = lines.some(l => l.isProvisional);
+  document.getElementById('statementHint').innerHTML = anyProv
+    ? '<span class="legend-prov"><span class="prov"></span>Provisional — source period not yet closed</span>' : '';
+}
+
+function showLoading() {
+  const sk = '<span class="skeleton">000000</span>';
+  if (!document.getElementById('hero').children.length) {
+    document.getElementById('hero').innerHTML = Array(4).fill(`<div class="card metric"><div class="metric-label">${sk}</div><div class="metric-value"><span class="skeleton">$00.0M</span></div><div class="metric-change"></div><div style="height:54px"></div></div>`).join('');
+    document.getElementById('pnlBody').innerHTML = Array(8).fill(`<tr><td>${sk}</td><td>${sk}</td><td>${sk}</td><td></td></tr>`).join('');
+    document.getElementById('chart').innerHTML = '<div class="chart-empty"><span class="spinner"></span></div>';
+  }
+}
+
+// Nothing booked yet: say so instead of loading forever. The live timer keeps
+// checking, so the P&L appears on its own once the first invoice is confirmed.
+function showEmpty() {
+  const msg = `<div class="card metric" style="grid-column:1/-1"><div class="metric-label">No bookings yet</div>
+    <div class="dz-sub" style="margin:6px 0 16px">Confirm an invoice on the <a href="#sales" onclick="showTab('sales');return false">Sales invoices</a> tab and the P&amp;L fills in here.</div></div>`;
+  document.getElementById('hero').innerHTML = msg;
+  document.getElementById('chart').innerHTML = '<div class="chart-empty">No data yet</div>';
+  document.getElementById('chartQuote').innerHTML = '';
+  document.getElementById('quotes').innerHTML = '';
+  document.getElementById('marketsBody').innerHTML = '';
+  document.getElementById('pnlBody').innerHTML = '<tr><td colspan="4" class="archive-empty">No bookings yet.</td></tr>';
+  document.getElementById('tickerTrack').innerHTML = '';
+  document.getElementById('pnlSubtitle').textContent = 'No bookings yet · USD';
+}
+
+async function refresh() {
+  if (refreshing) return;
+  if (!fromPicker) {
+    await loadDimensions();
+    if (!fromPicker) {
+      showEmpty();
+      lastUpdated = new Date();
+      nextRefreshAt = Date.now() + LIVE_MS;
+      return;
+    }
+  }
+  refreshing = true;
+  try {
+    await refreshShipments();
+    showLoading();
+    syncPresetButtons();
+    const entity = document.getElementById('entity');
+    const bu = document.getElementById('bu');
+    const entityLabel = entity.value === 'ALL' ? 'All entities' : entity.selectedOptions[0].textContent;
+    const buLabel = bu.value === 'ALL' ? 'all BUs' : bu.selectedOptions[0].textContent;
+    const shipment = document.getElementById('shipment').value;
+    // A shipment carries revenue, COGS and shipping; overheads are not allocated to it.
+    const shipLabel = shipment === 'ALL' ? '' : ` · Shipment ${shipment} (to gross profit)`;
+    document.getElementById('pnlSubtitle').textContent =
+      `${entityLabel}, ${buLabel}${shipLabel} · ${shortDate(fromPicker.value)} – ${shortDate(toPicker.value)} (${daysBetween(fromPicker.value, toPicker.value)} day${daysBetween(fromPicker.value, toPicker.value) === 1 ? '' : 's'}) · USD`;
+
+    const v = await loadView();
+    const viewKey = [v.entity, v.bu, v.shipment, v.dateFrom, v.dateTo].join('|');
+    if (viewKey !== lastViewKey) { lastSeen.clear(); lastViewKey = viewKey; }
+    view = v;
+    renderTicker(v);
+    renderHero(v);
+    renderQuotes(v);
+    renderMarkets(v);
+    renderPnl(v.main.pnlLines, v.main.targets, v.main.kpis);
+    renderChart();
+    applyFlashes(document.getElementById('tab-pnl'));
+    lastUpdated = new Date();
+  } finally {
+    refreshing = false;
+    nextRefreshAt = Date.now() + LIVE_MS;
+    tickClock();
+  }
+}
+
+document.getElementById('entity').addEventListener('change', () => { fillShipments(); refresh(); });
+document.getElementById('bu').addEventListener('change', refresh);
+// A shipment's sale, COGS and shipping all sit on the sale date: show all dates so
+// none of it falls outside the period. The period can be narrowed again after.
+document.getElementById('shipment').addEventListener('change', (e) => {
+  if (e.target.value !== 'ALL' && fromPicker) {
+    const [f, t] = presetRange('ALL');
+    fromPicker.set(f); toPicker.set(t);
+  }
+  refresh();
+});
+
+// --- Invoice drop-box -------------------------------------------------
+// Controlled fallback: drop -> parsed by the GitHub worker -> review/edit
+// card in the pending list -> explicit commit. Nothing reaches
+// normalized_transactions until the user confirms.
+const dropzone = document.getElementById('dropzone');
+const invoiceFile = document.getElementById('invoiceFile');
+const invoiceReview = document.getElementById('invoiceReview');
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function setReviewStatus(html, cls) {
+  invoiceReview.hidden = false;
+  invoiceReview.innerHTML = `<div class="job">${cls === 'error' ? `<span class="err-icon">${icon('x')}</span>` : '<span class="spinner"></span>'}<div class="invoice-status ${cls || ''}">${html}</div></div>`;
+}
+
+async function handleInvoiceFile(file) {
+  if (!file) return;
+  setReviewStatus(`Reading <strong>${escapeHtml(file.name)}</strong>…`);
+  try {
+    const dataBase64 = await readFileAsBase64(file);
+    const r = await pulseFetch('/api/invoices/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name, mimeType: file.type || 'application/pdf', dataBase64 }),
+    });
+    const data = await r.json();
+    if (!r.ok) { setReviewStatus(escapeHtml(data.error || 'Could not send the invoice.'), 'error'); return; }
+    invoiceReview.hidden = true;
+    invoiceReview.innerHTML = '';
+    invoiceFile.value = '';
+    loadInboxPending();
+  } catch (err) {
+    setReviewStatus(escapeHtml(String(err)), 'error');
+  }
+}
+
+const JOB_STEPS = ['uploading', 'queued', 'running'];
+const JOB_STEP_LABEL = { uploading: 'Upload', queued: 'Queue', running: 'Parse' };
+
+function renderGithubJobs(jobs) {
+  document.getElementById('githubJobList').innerHTML = jobs.map(j => {
+    const run = j.runUrl ? `<a class="btn ghost" href="${escapeHtml(j.runUrl)}" target="_blank" rel="noopener">View run ${icon('ext')}</a>` : '';
+    // Attachments that aren't invoices (BL, LOI) - one quiet line, not a failure.
+    if (j.status === 'skipped') {
+      const scanned = /Scanned/.test(j.error || '');
+      const pdf = j.from ? `<a class="btn ghost" href="/api/invoices/pdf?token=${encodeURIComponent(j.jobId)}" data-pdf="${escapeHtml(j.jobId)}" target="_blank" rel="noopener">${icon('file')}Open PDF</a>` : '';
+      return `<div class="card job skipped${scanned ? ' check' : ''}"><span class="skip-icon">${icon(scanned ? 'alert' : 'file')}</span>
+        <div class="job-main"><div class="job-name">${escapeHtml(j.filename)}${j.from ? ` <span class="invoice-status">· from ${escapeHtml(j.from)}</span>` : ''}</div><div class="invoice-status">${escapeHtml(j.error)}</div></div>
+        ${pdf}<button class="btn ghost" data-action="dismiss-job" data-token="${escapeHtml(j.jobId)}">Dismiss</button></div>`;
+    }
+    if (j.status === 'failed') {
+      return `<div class="card job failed"><span class="err-icon">${icon('x')}</span>
+        <div class="job-main"><div class="job-name">${escapeHtml(j.filename)}</div><div class="invoice-status error">${escapeHtml(j.error)}</div></div>
+        ${run}<button class="btn" data-action="dismiss-job" data-token="${escapeHtml(j.jobId)}">Dismiss</button></div>`;
+    }
+    const at = JOB_STEPS.indexOf(j.status);
+    const steps = JOB_STEPS.map((s, i) =>
+      `${i ? '<span class="line"></span>' : ''}<span class="step ${i < at ? 'done' : i === at ? 'now' : ''}"><span class="b"></span>${JOB_STEP_LABEL[s]}</span>`
+    ).join('');
+    return `<div class="card job"><span class="spinner"></span>
+      <div class="job-main"><div class="job-name">${escapeHtml(j.filename)}${j.from ? ` <span class="invoice-status">· from ${escapeHtml(j.from)}</span>` : ''}</div><div class="steps">${steps}</div></div>${run}</div>`;
+  }).join('');
+}
+
+document.getElementById('githubJobList').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-action="dismiss-job"]');
+  if (btn) discardInboxItem(btn.dataset.token);
+});
+
+dropzone.addEventListener('click', () => invoiceFile.click());
+dropzone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); invoiceFile.click(); } });
+invoiceFile.addEventListener('change', () => handleInvoiceFile(invoiceFile.files[0]));
+['dragover', 'dragenter'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+dropzone.addEventListener('drop', (e) => handleInvoiceFile(e.dataTransfer.files && e.dataTransfer.files[0]));
+
+// --- Theme --------------------------------------------------------------
+function isDarkEffective() {
+  const explicit = document.documentElement.getAttribute('data-theme');
+  if (explicit) return explicit === 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function updateThemeToggleLabel() {
+  document.getElementById('themeToggle').innerHTML = isDarkEffective()
+    ? `${icon('sun')}Light mode` : `${icon('moon')}Dark mode`;
+}
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const theme = isDarkEffective() ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('pulse-theme', theme); } catch (e) {}
+  updateThemeToggleLabel();
+});
+updateThemeToggleLabel();
+
+// --- Invoice archive ------------------------------------------------------
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso.replace(' ', 'T') + (iso.endsWith('Z') ? '' : 'Z'));
+  return isNaN(d) ? iso : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+async function loadArchive() {
+  const body = document.getElementById('archiveBody');
+  const rows = (await (await pulseFetch('/api/invoices/archive')).json()).filter(r => kindOf(r) === wsKind());
+  document.getElementById('statBooked').textContent = rows.filter(r => r.status === 'INGESTED').length;
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="7" class="archive-empty">Nothing booked in ${escapeHtml(WORKSPACES[workspace].title)} yet.</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(row => {
+    const amount = row.totalAmount != null ? `${escapeHtml(row.currency ?? '')} ${Number(row.totalAmount).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : '—';
+    return `<tr>
+      <td>${fmtDateTime(row.ingestedAt)}</td>
+      <td><span class="chip ${KINDS[kindOf(row)].chip}">${KINDS[kindOf(row)].label}</span></td>
+      <td>${escapeHtml(row.invoiceNumber || row.filename || '—')}${row.counterpartyName ? ` <span class="invoice-status">· ${escapeHtml(row.counterpartyName)}</span>` : ''}${row.linkedSaleInvoice ? ` <span class="invoice-status">→ ${escapeHtml(row.linkedSaleInvoice)}</span>` : ''}</td>
+      <td>${escapeHtml(row.entityCode ?? '—')} / ${escapeHtml(row.businessUnitCode ?? '—')}</td>
+      <td>${escapeHtml(row.productCode ?? '—')}</td>
+      <td class="num">${amount}</td>
+      <td><span class="status-pill ${escapeHtml(row.status.toLowerCase())}" title="${escapeHtml(row.errorReason ?? '')}">${escapeHtml(row.status.toLowerCase())}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// --- Workspaces: Sales invoices / COGS / Shipping ----------------------------
+// One intake section, three modes: each shows only its own group, cards and
+// bookings. COGS and Shipping also show, per sale, whether its cost is booked.
+const WORKSPACES = {
+  sales: { kind: 'REVENUE', title: 'Sales invoices', running: 'Parsing on GitHub',
+    sub: 'Sales invoices from Pulse_Rev@ or dropped here · nothing reaches the P&L until you confirm it' },
+  cogs: { kind: 'COGS', title: 'COGS', running: 'Sales without COGS',
+    sub: 'Cost statements and supplier invoices from Pulse_COGS@ · each links to a sale and books on the sale\'s date' },
+  shipping: { kind: 'SHIPPING', title: 'Shipping', running: 'Sales without shipping',
+    sub: 'Freight costs from Pulse_Ship@ · per MT or total, linked to a sale and booked on the sale\'s date' },
+};
+let workspace = 'sales';
+const wsKind = () => WORKSPACES[workspace].kind;
+
+function applyWorkspace() {
+  const W = WORKSPACES[workspace];
+  document.getElementById('wsTitle').textContent = W.title;
+  document.getElementById('wsSub').textContent = W.sub;
+  document.getElementById('statRunningLabel').textContent = W.running;
+  // Sales still missing a cost is a warning, not a job in progress.
+  const runIcon = document.getElementById('statRunningIcon');
+  runIcon.className = W.kind === 'REVENUE' ? 'stat-icon' : 'stat-icon warn';
+  runIcon.innerHTML = icon(W.kind === 'REVENUE' ? 'cog' : 'alert');
+  document.getElementById('revenueOnly').hidden = W.kind !== 'REVENUE';
+  document.getElementById('coverageBox').hidden = W.kind === 'REVENUE';
+  lastInboxTokens = ''; // re-render the card list for this workspace
+}
+
+async function loadCoverage() {
+  if (wsKind() === 'REVENUE') return;
+  const cogs = wsKind() === 'COGS';
+  const rows = await (await pulseFetch('/api/invoices/coverage')).json();
+  const label = cogs ? 'COGS' : 'Shipping';
+  document.getElementById('coverageTitle').textContent = `${label} by sale`;
+  document.getElementById('covAmountTh').textContent = `${label} (USD)`;
+  document.getElementById('covPerTTh').textContent = `${label} / t`;
+  const missing = rows.filter(r => (cogs ? r.cogsUsd : r.shippingUsd) == null).length;
+  document.getElementById('statRunning').textContent = missing;
+  document.getElementById('coverageBody').innerHTML = rows.map(r => {
+    const amt = cogs ? r.cogsUsd : r.shippingUsd;
+    const est = cogs ? r.cogsEstimated : r.shippingEstimated;
+    const status = amt == null ? 'missing' : est ? 'estimated' : 'ingested';
+    const statusLabel = amt == null ? 'Missing' : est ? 'Estimated' : 'Booked';
+    return `<tr>
+      <td>${escapeHtml(r.invoiceNumber)}</td>
+      <td>${escapeHtml(r.entityCode)} / ${escapeHtml(r.businessUnitCode)}</td>
+      <td>${shortDate(r.saleDate)}</td>
+      <td class="num">${fmtNum(r.tonnes, 3)}</td>
+      <td class="num">${fmtUsd(Math.round(r.revenueUsd))}</td>
+      <td class="num">${amt == null ? '—' : fmtUsd(Math.round(amt))}</td>
+      <td class="num">${amt == null || !r.tonnes ? '—' : '$' + (amt / r.tonnes).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td><span class="status-pill ${status}">${statusLabel}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" class="archive-empty">No sales booked yet.</td></tr>';
+}
+
+// --- Email intake status ------------------------------------------------------
+function renderMailbox(m) {
+  const el = document.getElementById('mailbox');
+  if (!m || !m.configured) {
+    el.innerHTML = `<div class="dz-icon off">${icon('mail')}</div><div>
+      <div class="dz-title">Email intake not set up</div>
+      <div class="dz-sub">Add <code>GMAIL_CLIENT_ID</code>, <code>GMAIL_CLIENT_SECRET</code> and <code>GMAIL_MAILBOX</code> to <code>.env</code>, then run <code>npm run gmail:auth</code> once and restart.</div></div>`;
+    return;
+  }
+  const checked = m.edge ? `by Supabase every 5 min${m.lastCheckedAt ? `; checked from here at ${new Date(m.lastCheckedAt).toLocaleTimeString('en-GB')}` : ''}`
+    : m.polling === false ? 'by the cloud server (polling is off here)'
+    : m.lastCheckedAt ? new Date(m.lastCheckedAt).toLocaleTimeString('en-GB') : 'not yet';
+  const domains = m.allowedDomains.map(d => '@' + escapeHtml(d)).join(', ');
+  el.innerHTML = `<div class="dz-icon ${m.lastError ? 'err' : ''}">${icon('mail')}</div><div>
+      <div class="dz-title">Watching ${(m.groups || []).filter(g => g.kind === wsKind()).map(g => `<span class="mb-addr">${escapeHtml(g.address)}</span> <span class="chip ${KINDS[g.kind].chip}">${KINDS[g.kind].label}</span>`).join(' &nbsp; ')}</div>
+      <div class="dz-sub">${m.lastError ? `<span class="invoice-status error">${escapeHtml(m.lastError)}</span>`
+        : `Read from ${escapeHtml(m.mailbox)} (group emails only). ${wsKind() === 'REVENUE' ? 'Invoice PDFs' : 'PDFs and per-ton statements typed in the email'} from ${domains} are picked up and labelled <code>Pulse/Processed</code> in Gmail. Last checked ${checked}.`}</div></div>
+    <div class="mb-meta"><b>${m.pickedUp}</b>picked up since start
+      ${m.edge ? `<button class="btn ghost" id="pollNow" style="margin-top:6px">Check now</button>` : ''}</div>`;
+}
+
+// Asks the Supabase mailbox poll to run now (the server calls it with the edge secret).
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('#pollNow');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  try {
+    const r = await pulseFetch('/api/invoices/poll-now', { method: 'POST' });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+  } catch (err) {
+    alert(`Mailbox check failed: ${err.message}`);
+  }
+  await loadInboxPending();
+});
+
+// --- Invoice inbox (auto-extracted, awaiting review) --------------------
+let lastInboxTokens = '';
+// Each entity runs one business unit, so the card fills BU from the entity.
+const buOfEntity = (code) => (dims?.entities.find(e => e.code === code) || {}).businessUnitCode || '';
+// Mirrors engine/invoice-guard.ts; the server enforces it, this only shows it early (USD invoices).
+const PRICE_GUARD = { min: 300, max: 3000 };
+const FREIGHT_GUARD = { min: 1, max: 1000 };
+
+// One card per document kind - which Pulse group the email came through.
+// COGS must name the booked sale it costs; it then books under that sale's
+// entity and on its date. Shipping may name one; mirrors engine/invoice-booking.ts.
+const KINDS = {
+  REVENUE: { label: 'Revenue', chip: 'good', party: 'Customer', partyField: 'customerName', dateLabel: 'Sale date',
+    required: ['saleDate', 'entityCode', 'businessUnitCode', 'quantityMt', 'currency', 'totalAmount'], sale: null },
+  COGS: { label: 'COGS', chip: 'warn', party: 'Supplier', partyField: 'counterpartyName', dateLabel: 'Invoice date',
+    required: ['counterpartyName', 'invoiceNumber', 'saleDate', 'linkedSaleInvoice', 'quantityMt', 'currency', 'totalAmount'], sale: 'required' },
+  SHIPPING: { label: 'Shipping', chip: '', party: 'Carrier', partyField: 'counterpartyName', dateLabel: 'Invoice date',
+    required: ['counterpartyName', 'invoiceNumber', 'saleDate', 'entityCode', 'currency', 'totalAmount'], sale: 'optional' },
+};
+const kindOf = (ex) => KINDS[ex.docKind] ? ex.docKind : 'REVENUE';
+
+function inboxCardHtml(token, filename, ex, src, booked) {
+  const kind = kindOf(ex), K = KINDS[kind];
+  const id = (field) => `inv_${field}_${token}`;
+  const opt = (list, cur, blank) => (blank ? '<option value="">Choose…</option>' : '') +
+    list.map(c => `<option ${c === cur ? 'selected' : ''}>${c}</option>`).join('');
+  // Every field carries the marker: what is required can change on the card (shipping per MT vs total).
+  const field = (name, label, control) => `<div class="f" data-field="${name}"><label for="${id(name)}">${label}<span class="req" hidden>Required</span></label>${control}</div>`;
+  const qty = Number(ex.quantityMt), amt = Number(ex.totalAmount);
+  const perT = qty > 0 && amt ? `${escapeHtml(ex.currency ?? '')} ${Math.round(amt / qty).toLocaleString('en-US')}/MT` : '—';
+  const notes = (ex.notes || '').split(/(?<=\.)\s+/).filter(Boolean);
+  const party = ex[K.partyField] || '';
+  const pdfLink = src && !ex.fromEmailText ? `<a class="btn ghost" href="/api/invoices/pdf?token=${encodeURIComponent(token)}" data-pdf="${escapeHtml(token)}" target="_blank" rel="noopener">${icon('file')}Open PDF</a>` : '';
+  return `
+    <div class="card invoice-review" data-token="${token}" data-kind="${kind}"${booked ? ' data-booked="1"' : ''}>
+      <div class="card-head">
+        <div class="review-title">
+          <h3 class="card-title"><span class="chip ${K.chip}">${K.label}</span> ${escapeHtml(ex.invoiceNumber || 'New invoice')}${party ? ` · ${escapeHtml(party)}` : ''}</h3>
+          <span class="review-file">${escapeHtml(filename)}</span>
+        </div>
+        <span class="chip warn" id="${id('badge')}">Needs input</span>
+      </div>
+      ${src ? `<div class="source-line">${icon('mail')}<span>Via <b>${escapeHtml(src.group || src.mailbox)}</b></span><span>From <b>${escapeHtml(src.emailFrom)}</b></span><span>${escapeHtml(src.emailSubject || '(no subject)')}</span><span>${fmtDateTime(src.emailReceivedAt)}</span></div>` : ''}
+      ${booked ? `<div class="banner show" style="margin:12px 18px 0">${icon('alert')}<span><strong>Already booked.</strong> ${escapeHtml(ex.invoiceNumber)} is on the P&amp;L under ${escapeHtml(booked.entityCode)} / ${escapeHtml(booked.businessUnitCode)}${booked.tonnes ? `, ${fmtNum(booked.tonnes, 3)} t` : ''}, USD ${Number(booked.amountUsd).toLocaleString('en-US', { maximumFractionDigits: 2 })}. Confirming replaces that booking with this card; discard it if this is a re-sent copy.</span></div>` : ''}
+      ${kind === 'REVENUE' ? `<div class="review-summary">
+        <div><span class="k">Quantity</span><span class="v num">${ex.quantityMt != null ? fmtNum(qty, 3) + ' MT' : '—'}</span></div>
+        <div><span class="k">Revenue</span><span class="v num">${ex.totalAmount != null ? `${escapeHtml(ex.currency ?? '')} ${amt.toLocaleString('en-US', { maximumFractionDigits: 2 })}` : '—'}</span></div>
+        <div><span class="k">Price</span><span class="v num">${perT}</span></div>
+      </div>` : ''}
+      <div class="form">
+        ${kind !== 'REVENUE' ? field('counterpartyName', K.party, `<input id="${id('counterpartyName')}" value="${escapeHtml(party)}">`) : ''}
+        ${field('invoiceNumber', kind === 'REVENUE' ? 'Invoice #' : `${K.party} invoice #`, `<input id="${id('invoiceNumber')}" value="${escapeHtml(ex.invoiceNumber)}">`)}
+        ${field('saleDate', K.dateLabel, `<input id="${id('saleDate')}" type="date" value="${escapeHtml(ex.saleDate ?? '')}">`)}
+        ${K.sale ? field('linkedSaleInvoice', `For sale invoice #${K.sale === 'optional' ? ' <span class="k">optional</span>' : ''}`, `<input id="${id('linkedSaleInvoice')}" value="${escapeHtml(ex.linkedSaleInvoice ?? '')}" placeholder="e.g. UCVP6N26009-YAN-FOB">`) : ''}
+        ${field('entityCode', K.sale ? 'Entity <span class="k">from the sale</span>' : 'Entity', `<select id="${id('entityCode')}"${K.sale === 'required' ? ' disabled' : ''}>${opt(['SAE', 'TTO', 'KSA', 'JOR'], ex.entityCode, true)}</select>`)}
+        ${field('businessUnitCode', 'Business unit <span class="k">set by entity</span>', `<select id="${id('businessUnitCode')}" disabled>${opt(['COLLECTION', 'AGGREGATION'], ex.businessUnitCode || buOfEntity(ex.entityCode), true)}</select>`)}
+        ${field('productCode', 'Product', `<select id="${id('productCode')}">${opt(['UCO', 'ACID_OIL', 'PFAD', 'TALLOW'], ex.productCode)}</select>`)}
+        ${kind === 'REVENUE' ? field('customerName', 'Customer', `<input id="${id('customerName')}" value="${escapeHtml(ex.customerName)}">`) : ''}
+        ${field('quantityMt', kind === 'SHIPPING' ? 'Quantity (MT) <span class="k">optional</span>' : 'Quantity (MT)', `<input id="${id('quantityMt')}" type="number" step="any" value="${ex.quantityMt ?? ''}">`)}
+        ${field('currency', 'Currency', `<input id="${id('currency')}" value="${escapeHtml(ex.currency ?? '')}" maxlength="3" style="text-transform:uppercase">`)}
+        ${kind !== 'REVENUE' ? `<div class="f" data-field="amountBasis"><label>Amount sent as</label>
+          <div class="segmented small basis" id="${id('amountBasis')}" data-value="${ex.amountBasis || (kind === 'SHIPPING' ? 'PER_TONNE' : 'TOTAL')}">
+            <button type="button" data-basis="PER_TONNE">Per MT</button><button type="button" data-basis="TOTAL">Total</button></div></div>
+          ${field('ratePerTonne', 'Cost per MT', `<input id="${id('ratePerTonne')}" type="number" step="any" value="${ex.ratePerTonne ?? ''}">`)}` : ''}
+        ${field('totalAmount', 'Total amount', `<input id="${id('totalAmount')}" type="number" step="any" value="${ex.totalAmount ?? ''}">`)}
+      </div>
+      ${kind !== 'REVENUE' ? `<div class="calc-line" id="${id('calc')}"></div>` : ''}
+      ${K.sale ? `<div class="notes" id="${id('sale')}" style="display:none"></div>` : ''}
+      ${notes.length ? `<div class="notes"><div class="notes-title">Notes</div><ul>${notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul></div>` : ''}
+      <div class="actions">
+        <button class="btn primary" data-action="confirm" data-token="${token}">${icon('check')}${booked ? 'Replace booking' : 'Confirm &amp; add to P&amp;L'}</button>
+        ${pdfLink}
+        <button class="btn ghost" data-action="discard" data-token="${token}">Discard</button>
+        <span class="invoice-status" id="${id('status')}"></span>
+      </div>
+    </div>`;
+}
+
+// Looks up the sale a COGS / shipping invoice belongs to and shows where it
+// will book: the sale's entity, BU and date (the server enforces the same).
+const saleLookups = new Map();
+async function lookupSale(card) {
+  const token = card.dataset.token, K = KINDS[card.dataset.kind];
+  const input = card.querySelector(`#inv_linkedSaleInvoice_${token}`);
+  if (!input) return;
+  const ref = input.value.trim();
+  const box = document.getElementById(`inv_sale_${token}`);
+  const entity = card.querySelector(`#inv_entityCode_${token}`);
+  if (!ref) {
+    delete card.dataset.sale;
+    delete card.dataset.saleTonnes;
+    box.style.display = 'none';
+    if (K.sale === 'optional') entity.disabled = false;
+    return validateCard(card);
+  }
+  saleLookups.set(token, ref);
+  const { shipment } = await (await pulseFetch(`/api/invoices/sale?ref=${encodeURIComponent(ref)}`)).json();
+  if (saleLookups.get(token) !== ref) return; // a newer lookup is in flight
+  box.style.display = '';
+  if (shipment) {
+    const sales = shipment.sales, sale = sales[0];
+    card.dataset.sale = '1';
+    card.dataset.saleTonnes = shipment.tonnes || '';
+    if (sales.length > 1) card.dataset.multi = '1'; else delete card.dataset.multi;
+    entity.value = sale.entityCode;
+    entity.disabled = true;
+    card.querySelector(`#inv_businessUnitCode_${token}`).value = sale.businessUnitCode;
+    const usd = (n) => Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    if (sales.length > 1) {
+      // One shipment invoiced in parts: the cost covers all of it, split by tonnes.
+      box.innerHTML = `<div class="notes-title">Linked shipment &middot; ${sales.length} invoices</div>
+        ${sales.map(x => `${escapeHtml(x.invoiceNumber)}: <b>${fmtNum(x.tonnes, 3)} t</b> (${escapeHtml(x.entityCode)}, ${shortDate(x.saleDate)})`).join('<br>')}
+        <br>Total <b>${fmtNum(shipment.tonnes, 3)} t</b>. The cost is split over the invoices by tonnes, each part booked on its sale's date and entity.`;
+    } else {
+      box.innerHTML = `<div class="notes-title">Linked sale</div>Books under <b>${escapeHtml(sale.entityCode)} / ${escapeHtml(sale.businessUnitCode)}</b> on <b>${shortDate(sale.saleDate)}</b>, the sale's date, so the cost lands in the same period as the revenue (${sale.tonnes ? fmtNum(sale.tonnes, 3) + ' t, ' : ''}USD ${usd(sale.amountUsd)}).` +
+        (shipment.siblings.length ? `<br><span class="invoice-status error">This invoice is one part of a split shipment with ${shipment.siblings.map(escapeHtml).join(', ')}. To cost the whole shipment, link it by the shipment number instead (e.g. the invoice number without its -01 / -02).</span>` : '');
+    }
+  } else {
+    delete card.dataset.sale;
+    delete card.dataset.saleTonnes;
+    if (K.sale === 'optional') entity.disabled = false;
+    box.innerHTML = `<span class="invoice-status error">Sale ${escapeHtml(ref)} isn't booked yet. Confirm its sales invoice first.</span>`;
+  }
+  validateCard(card);
+}
+
+// Confirm stays disabled until every field the P&L needs is filled, and the
+// empty ones are highlighted so the reviewer sees what is left.
+// COGS / shipping quoted per MT: total = rate x volume, the volume being the
+// quantity on the card (partial shipment) or else the linked sale's tonnes.
+// The server recomputes this; the card shows the sum before confirming.
+function shippingBasis(card) {
+  const el = document.getElementById(`inv_amountBasis_${card.dataset.token}`);
+  return el ? el.dataset.value : 'TOTAL';
+}
+function requiredFor(card) {
+  const K = KINDS[card.dataset.kind || 'REVENUE'];
+  if (shippingBasis(card) !== 'PER_TONNE') return K.required;
+  // Per MT: the amount and the volume come from the rate x the shipment's tonnes.
+  return [...K.required.filter(f => f !== 'totalAmount' && f !== 'quantityMt'), 'ratePerTonne'];
+}
+function syncShipping(card) {
+  const token = card.dataset.token, basisEl = document.getElementById(`inv_amountBasis_${token}`);
+  if (!basisEl) return;
+  const perT = basisEl.dataset.value === 'PER_TONNE';
+  basisEl.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.basis === basisEl.dataset.value));
+  card.querySelector('.f[data-field="ratePerTonne"]').style.display = perT ? '' : 'none';
+  const total = document.getElementById(`inv_totalAmount_${token}`);
+  total.readOnly = perT;
+  const calc = document.getElementById(`inv_calc_${token}`);
+  if (!perT) { calc.textContent = ''; return; }
+  const rate = Number(document.getElementById(`inv_ratePerTonne_${token}`).value);
+  const qtyIn = Number(document.getElementById(`inv_quantityMt_${token}`).value);
+  const volume = qtyIn > 0 ? qtyIn : Number(card.dataset.saleTonnes || 0);
+  const from = qtyIn > 0 ? 'quantity on the card' : card.dataset.multi ? 'linked shipment' : 'linked sale';
+  const cur = escapeHtml(document.getElementById(`inv_currency_${token}`).value.toUpperCase() || '');
+  if (rate > 0 && volume > 0) {
+    const amt = Math.round(rate * volume * 100) / 100;
+    total.value = amt;
+    calc.innerHTML = `${cur} ${rate.toLocaleString('en-US', { maximumFractionDigits: 4 })}/MT × <b>${fmtNum(volume, 3)} t</b> (${from}) = <b>${cur} ${amt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b>`;
+  } else {
+    total.value = '';
+    calc.innerHTML = volume > 0 ? `Enter the cost per MT; it is multiplied by ${fmtNum(volume, 3)} t (${from}).`
+      : '<span class="invoice-status error">Per MT needs the shipment volume: link the sale, or enter the quantity shipped.</span>';
+  }
+}
+
+function validateCard(card) {
+  const token = card.dataset.token, kind = card.dataset.kind || 'REVENUE', K = KINDS[kind];
+  syncShipping(card);
+  const required = requiredFor(card);
+  let missing = 0;
+  card.querySelectorAll('.f[data-field]').forEach(f => {
+    if (!required.includes(f.dataset.field)) return;
+    const el = f.querySelector('input, select');
+    const empty = !String(el.value).trim();
+    f.classList.toggle('missing', empty);
+    f.querySelector('.req').hidden = !empty;
+    if (empty) missing++;
+  });
+  const val = (f) => card.querySelector(`#inv_${f}_${token}`).value;
+  const qty = Number(val('quantityMt')), amt = Number(val('totalAmount'));
+  const perT = qty > 0 ? amt / qty : null;
+  const band = kind === 'SHIPPING' ? FREIGHT_GUARD : PRICE_GUARD;
+  const badPrice = val('currency').toUpperCase() === 'USD' && perT != null && amt > 0 &&
+    (perT < band.min || perT > band.max);
+  ['quantityMt', 'totalAmount'].forEach(f => {
+    const el = card.querySelector(`.f[data-field="${f}"]`);
+    el.classList.toggle('missing', badPrice || (required.includes(f) && el.querySelector('input').value === ''));
+  });
+  const saleMissing = kind === 'COGS' && val('linkedSaleInvoice').trim() && !card.dataset.sale;
+  card.querySelector('[data-action="confirm"]').disabled = missing > 0 || badPrice || saleMissing;
+  const badge = document.getElementById(`inv_badge_${token}`);
+  badge.className = missing || badPrice || saleMissing ? 'chip warn' : 'chip good';
+  badge.textContent = badPrice ? `USD ${Math.round(perT).toLocaleString('en-US')}/t is outside ${band.min}–${band.max.toLocaleString('en-US')} — check MT vs kg`
+    : missing ? `${missing} field${missing > 1 ? 's' : ''} to fill`
+    : saleMissing ? 'Linked sale not booked'
+    : card.dataset.booked ? 'Already booked' : 'Ready to book';
+  if (!badPrice && !missing && !saleMissing && card.dataset.booked) badge.className = 'chip warn';
+}
+
+async function confirmInboxItem(token) {
+  const id = (field) => document.getElementById(`inv_${field}_${token}`);
+  const v = (field) => (id(field) ? id(field).value : undefined);
+  const n = (field) => (v(field) === '' || v(field) == null ? null : Number(v(field)));
+  const edited = {
+    invoiceNumber: v('invoiceNumber'),
+    saleDate: v('saleDate'),
+    entityCode: v('entityCode'),
+    businessUnitCode: v('businessUnitCode'),
+    productCode: v('productCode'),
+    customerName: v('customerName'),
+    counterpartyName: v('counterpartyName'),
+    linkedSaleInvoice: v('linkedSaleInvoice'),
+    quantityMt: n('quantityMt'),
+    currency: (v('currency') || '').toUpperCase(),
+    totalAmount: n('totalAmount'),
+    amountBasis: id('amountBasis') ? id('amountBasis').dataset.value : undefined,
+    ratePerTonne: n('ratePerTonne') ?? undefined,
+  };
+  for (const k of Object.keys(edited)) if (edited[k] === undefined) delete edited[k];
+  const statusEl = id('status');
+  statusEl.textContent = 'Adding…';
+  statusEl.className = 'invoice-status';
+  const r = await pulseFetch('/api/invoices/commit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, edited }),
+  });
+  const data = await r.json();
+  if (!r.ok) {
+    statusEl.textContent = data.error || 'Failed to add.';
+    statusEl.className = 'invoice-status error';
+    return;
+  }
+  statusEl.textContent = `Added (status: ${data.summary.status}).`;
+  statusEl.className = 'invoice-status ok';
+  await refresh();
+  await loadArchive();
+  loadCoverage();
+  refreshBookedCounts();
+  lastInboxTokens = ''; // force the next poll to re-render without this item
+  setTimeout(loadInboxPending, 300);
+}
+
+async function discardInboxItem(token) {
+  await pulseFetch('/api/invoices/discard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+  lastInboxTokens = '';
+  loadInboxPending();
+}
+
+const pendingList = document.getElementById('inboxPendingList');
+pendingList.addEventListener('click', (e) => {
+  const basis = e.target.closest('button[data-basis]');
+  if (basis) {
+    basis.parentElement.dataset.value = basis.dataset.basis;
+    return validateCard(basis.closest('.invoice-review'));
+  }
+  const btn = e.target.closest('button[data-action]');
+  if (!btn || btn.disabled) return;
+  if (btn.dataset.action === 'confirm') confirmInboxItem(btn.dataset.token);
+  if (btn.dataset.action === 'discard') discardInboxItem(btn.dataset.token);
+});
+['input', 'change'].forEach(evt => pendingList.addEventListener(evt, (e) => {
+  if (e.target.id && e.target.id.startsWith('inv_linkedSaleInvoice_')) {
+    const card = e.target.closest('.invoice-review');
+    clearTimeout(card._saleTimer);
+    card._saleTimer = setTimeout(() => lookupSale(card), 350);
+  }
+  if (e.target.id && e.target.id.startsWith('inv_entityCode_')) {
+    document.getElementById(e.target.id.replace('inv_entityCode_', 'inv_businessUnitCode_')).value = buOfEntity(e.target.value);
+  }
+  const card = e.target.closest('.invoice-review');
+  if (card) validateCard(card);
+}));
+
+async function loadInboxPending() {
+  let data;
+  try {
+    data = await (await pulseFetch('/api/invoices/pending')).json();
+  } catch {
+    return;
+  }
+  const jobs = data.jobs || [];
+  const running = jobs.filter(j => j.status !== 'failed' && j.status !== 'skipped').length;
+  for (const k of ['REVENUE', 'COGS', 'SHIPPING']) {
+    const n = data.items.filter(i => kindOf(i.extracted) === k).length;
+    const count = document.getElementById(`count-${k}`);
+    count.hidden = !n;
+    count.textContent = n;
+  }
+  const items = data.items.filter(i => kindOf(i.extracted) === wsKind());
+  document.getElementById('statPending').textContent = items.length;
+  if (wsKind() === 'REVENUE') document.getElementById('statRunning').textContent = running;
+
+  renderMailbox(data.mail);
+  lastMail = data.mail;
+  renderSources();
+  const noteEl = document.getElementById('inboxNote');
+  const dir = `<code>${escapeHtml(data.inboxDir || '')}</code>`;
+  if (!data.inboxDir) {
+    // Cloud: no inbox folder - invoices come by email or the drop box above.
+    noteEl.className = data.workerConfigured ? 'inbox-note' : 'inbox-note warn';
+    noteEl.innerHTML = data.workerConfigured
+      ? 'Invoices arrive by email, or drop a PDF in the box above.'
+      : 'GitHub worker not configured: <code>GITHUB_TOKEN</code> / <code>GITHUB_REPO</code> missing on the server.';
+  } else if (!data.workerConfigured && data.waitingCount > 0) {
+    noteEl.className = 'inbox-note warn';
+    noteEl.innerHTML = `${data.waitingCount} invoice(s) waiting in ${dir}. Add <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> to <code>.env</code> to send them to the GitHub worker.`;
+  } else if (!data.workerConfigured) {
+    noteEl.className = 'inbox-note';
+    noteEl.innerHTML = `Or save PDFs into ${dir}. GitHub worker not configured: <code>GITHUB_TOKEN</code> / <code>GITHUB_REPO</code> missing from <code>.env</code>.`;
+  } else {
+    noteEl.className = 'inbox-note';
+    noteEl.innerHTML = `Or save PDFs into ${dir} — Pulse picks them up every few seconds.`;
+  }
+
+  renderGithubJobs(jobs);
+  document.getElementById('pendingTitle').hidden = !items.length;
+  document.getElementById('pendingChip').textContent = items.length;
+  const tokenKey = workspace + ':' + items.map(i => i.token).sort().join(',');
+  if (tokenKey === lastInboxTokens) return; // avoid clobbering in-progress edits
+  lastInboxTokens = tokenKey;
+  pendingList.innerHTML = items.map(i => inboxCardHtml(i.token, i.filename, i.extracted, i.source, i.alreadyBooked)).join('');
+  pendingList.querySelectorAll('.invoice-review').forEach(c => { validateCard(c); lookupSale(c); });
+}
+
+setInterval(loadInboxPending, 5000);
+
+// --- Tabs -------------------------------------------------------------------
+function showTab(tab) {
+  if (tab === 'invoices') tab = 'sales'; // old links
+  if (tab !== 'pnl' && !WORKSPACES[tab]) tab = 'pnl';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('tab-pnl').hidden = tab !== 'pnl';
+  document.getElementById('tab-invoices').hidden = tab === 'pnl';
+  if (tab !== 'pnl') {
+    workspace = tab;
+    applyWorkspace();
+    loadArchive(); loadInboxPending(); loadCoverage();
+  }
+  if (tab === 'pnl') renderChart(); // sized while hidden; redraw at real width
+  if (location.hash !== `#${tab}`) history.replaceState(null, '', `#${tab}`);
+}
+document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
+
+(async () => {
+  if (!(await ensureSignedIn())) return;
+  showLoading();
+  if (location.hash && location.hash !== '#pnl') showTab(location.hash.slice(1));
+  await loadDimensions();
+  await loadHealth();
+  await refresh();
+  await loadInboxPending();
+  loadArchive();
+  refreshBookedCounts();
+  setInterval(refreshBookedCounts, 60000);
+})();
+</script>
+</body>
+</html>
